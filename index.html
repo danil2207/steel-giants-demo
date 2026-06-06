@@ -1,3 +1,5 @@
+cat > /mnt/user-data/outputs/index.html << 'ENDHTML'
+<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
@@ -1269,3 +1271,5 @@ document.addEventListener('keyup',e=>{if(e.key==='a'||e.key==='d'||e.key==='Arro
 </script>
 </body>
 </html>
+ENDHTML
+echo "Size: $(wc -c < /mnt/user-data/outputs/index.html)"
