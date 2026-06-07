@@ -1344,11 +1344,14 @@ function rShop(){
   h+=`<div style="background:linear-gradient(135deg,#fff8e0,#f4e8a0);border:1px solid #c8a830;border-radius:12px;padding:10px 14px;margin-bottom:10px;box-shadow:0 2px 8px #c8a83033"><div style="font-size:12px;color:#604010;font-weight:bold">💰 Кредиты: ${p.cr} CR</div><div style="font-size:9px;color:#8a7040">LVL ${p.lvl} · Нажми чтобы купить</div></div>`;
   const mkC=(item,type,can,own,lk,buyFn)=>{return`<div class="icard ${own?'owned':''} ${lk?'locked':''}" onclick="${can?buyFn:'void 0'}"><span class="ilvl ${lk?'no':'ok'}">LV${item.lv}</span><div class="iname">${item.n||item.name}${own?' ✓':''}</div><div class="istat">${type==='w'?item.t.toUpperCase()+' ·D:'+item.dmg+' ·R:'+item.rng+' ·ROF:'+item.rof+' ·EN:'+item.ec+' — '+item.d:item.d}</div><div class="iprice">${item.p===0?'<span style="color:#40a020">БЕСПЛАТНО</span>':item.p+' CR'} ${lk?`<span style="color:#c03020">🔒 LV${item.lv}</span>`:can?`<span style="color:#408020">→ КУПИТЬ</span>`:own?`<span style="color:#808040">✓ Есть</span>`:`<span style="color:#907030">Мало CR</span>`}</div></div>`;};
   h+=`<div class="psec">🔫 Оружие</div>`;
-  for(const w of WEAPONS.filter(x=>!x.unique)){const own=p.w.includes(w.id)||p.inv.some(x=>x.type==='weapon'&&x.id===w.id);const lk=p.lvl<w.lv;const can=!own&&!lk&&p.cr>=w.p;h+=mkC(w,'w',can,own,lk,`sW('${w.id}')`);}
+  for(const w of WEAPONS.filter(x=>!x.unique)){const lk=p.lvl<w.lv;
+const can=!lk&&p.cr>=w.p;h+=mkC(w,'w',can,own,lk,`sW('${w.id}')`);}
   h+=`<div class="psec">⚡ Энергомодули</div>`;
-  for(const m of MODULES.filter(x=>x.sl==='en')){const ins=p.enSl.includes(m.id)||p.inv.some(x=>x.type==='module'&&x.id===m.id);const lk=p.lvl<m.lv;const can=!ins&&!lk&&p.cr>=m.p;h+=mkC(m,'m',can,ins,lk,`sM('${m.id}')`);}
+  for(const m of MODULES.filter(x=>x.sl==='en')){const lk=p.lvl<m.lv;
+const can=!lk&&p.cr>=m.p;h+=mkC(m,'m',can,ins,lk,`sM('${m.id}')`);}
   h+=`<div class="psec">🛡 Броня / Трюм</div>`;
-  for(const m of MODULES.filter(x=>x.sl==='ar')){const ins=p.arSl.includes(m.id)||p.inv.some(x=>x.type==='module'&&x.id===m.id);const lk=p.lvl<m.lv;const can=!ins&&!lk&&p.cr>=m.p;h+=mkC(m,'m',can,ins,lk,`sM('${m.id}')`);}
+  for(const m of MODULES.filter(x=>x.sl==='ar')){const lk=p.lvl<m.lv;
+const can=!lk&&p.cr>=m.p;h+=mkC(m,'m',can,ins,lk,`sM('${m.id}')`);}
   h+=`<div class="psec">🤖 Мехи</div>`;
   for(const mc of MECHS){const own=p.mech===mc.id||p.inv.some(x=>x.type==='mech'&&x.id===mc.id);const lk=p.lvl<mc.lv;const can=!own&&!lk&&(mc.p===0||p.cr>=mc.p);h+=`<div class="icard ${own?'owned':''} ${lk?'locked':''}" onclick="${can?`sMc('${mc.id}')`:'void 0'}"><span class="ilvl ${lk?'no':'ok'}">LV${mc.lv}</span><div class="iname">${mc.n}${own?' ✓':''}</div><div class="istat">${mc.d} · Базовый HP: ${mc.bhp}</div><div class="iprice">${mc.p===0?'<span style="color:#40a020">БЕСПЛАТНО</span>':mc.p+' CR'} ${lk?`<span style="color:#c03020">🔒 LV${mc.lv}</span>`:can?`<span style="color:#408020">→ КУПИТЬ</span>`:own?`<span style="color:#808040">✓ Активен</span>`:`<span style="color:#907030">Мало CR</span>`}</div></div>`;}
   b.innerHTML=h;
