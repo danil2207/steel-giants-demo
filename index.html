@@ -364,50 +364,80 @@ const ZONES=[
    loot:['КристаллРуин','Осколок','Чип','Ядро','Тень'],
    bossName:'ПУСТОТНЫЙ КОЛОСС',bossLoot:['ЯдроПустоты','ФрагментКолосса','СхемаБога']}
 ];
-const LOOT_P={'Плата':25,'Схема':35,'Лом':15,'Масло':20,'Кость':22,'Клешня':50,'Яд':85,'Панцирь':65,'Клык':45,'Кристалл':80,'КристаллРуин':110,'Осколок':140,'Чип':100,'Ядро':130,'Тень':160,'МатрицаИИ':450,'ЖетонСтражника':320,'СхемаTitan':550,'ЯдТитана':650,'ПанцирьБосса':520,'ЯдроПустыни':750,'ЯдроПустоты':950,'ФрагментКолосса':800,'СхемаБога':1300,'МатрицаИИ':450,'БОС-КОР':600,'РЕД-СПЛАВ':500,'КВАНТ':700};
+const LOOT_P={
+  'Плата':25,'Схема':35,'Лом':15,'Масло':20,'Кость':22,
+  'Клешня':50,'Яд':85,'Панцирь':65,'Клык':45,'Кристалл':80,
+  'КристаллРуин':110,'Осколок':140,'Чип':100,'Ядро':130,'Тень':160,
+  'МатрицаИИ':450,'ЖетонСтражника':320,'СхемаTitan':550,
+  'ЯдТитана':650,'ПанцирьБосса':520,'ЯдроПустыни':750,
+  'ЯдроПустоты':950,'ФрагментКолосса':800,'СхемаБога':1300,
+  'БОС-КОР':600,'РЕД-СПЛАВ':500,'КВАНТ':700
+};
+
+// WEAPONS: 7 per type × 3 types = 21 + 3 unique = 24 total
+// levels spread 1-90 per type, dmg/ec scale exponentially
 const WEAPONS=[
-  {id:'pistol', n:'ПИСТОЛЕТ МЕХ',  t:'ballistic',dmg:22, rng:260,rof:1.8,ec:5,  p:0,    lv:1, sell:0,   d:'Стартовое'},
-  {id:'smg',    n:'АВТОПУШКА-L',   t:'ballistic',dmg:36, rng:300,rof:1.2,ec:8,  p:400,  lv:2, sell:200, d:'Баланс'},
-  {id:'cannon', n:'АВТОПУШКА-H',   t:'ballistic',dmg:60, rng:350,rof:0.9,ec:14, p:900,  lv:4, sell:450, d:'Тяжёлая'},
-  {id:'gauss',  n:'ГАУСС',         t:'ballistic',dmg:95, rng:440,rof:0.55,ec:20,p:2200, lv:7, sell:1100,d:'Снайпер'},
-  {id:'rail',   n:'РЕЛЬСОТРОН',    t:'ballistic',dmg:16500,rng:520,rof:0.35,ec:35,p:6000, lv:12,sell:3000,d:'Пробивает'},
-  {id:'l1',     n:'ЛАЗЕР МК1',     t:'energy',   dmg:16, rng:180,rof:4.0,ec:8,  p:200,  lv:1, sell:100, d:'Быстрый'},
-  {id:'l2',     n:'ЛАЗЕР МК2',     t:'energy',   dmg:33, rng:210,rof:2.8,ec:15, p:700,  lv:4, sell:350, d:'Улучшен'},
-  {id:'plasma', n:'ПЛАЗМА',        t:'energy',   dmg:52, rng:235,rof:1.8,ec:24, p:1800, lv:6, sell:900, d:'Мощный'},
-  {id:'phazon', n:'ФАЗОН',         t:'energy',   dmg:80, rng:270,rof:1.3,ec:38, p:4500, lv:10,sell:2250,d:'Высший'},
-  {id:'arc',    n:'МОЛНИЯ',        t:'energy',   dmg:135,rng:300,rof:0.9,ec:55, p:9000, lv:14,sell:4500,d:'Цепная'},
-  {id:'rpod',   n:'РАКЕТНЫЙ ПОД',  t:'rocket',   dmg:42, rng:270,rof:1.1,ec:20, p:350,  lv:2, sell:175, d:'Сплэш'},
-  {id:'napalm', n:'НАПАЛМ',        t:'rocket',   dmg:65, rng:310,rof:0.85,ec:30,p:1400, lv:5, sell:700, d:'Зажиг.'},
-  {id:'volcano',n:'ВУЛКАН МРЛ',    t:'rocket',   dmg:108,rng:355,rof:0.6,ec:48, p:3500, lv:9, sell:1750,d:'Тяжёлый'},
-  {id:'armag',  n:'АРМАГЕДДОН',    t:'rocket',   dmg:200,rng:400,rof:0.35,ec:80,p:12000,lv:15,sell:6000,d:'Финальный'},
-  {id:'godshot',n:'⭐ БОЖ.ВЫС.',   t:'ballistic',dmg:32000,rng:600,rof:0.4,ec:0,  p:0,   lv:1, sell:8000,d:'Уникальное',unique:true},
-  {id:'voidb',  n:'⭐ ЛУЧА ПУСТ.', t:'energy',   dmg:250,rng:400,rof:0.8,ec:60, p:0,   lv:1, sell:9000,d:'Уникальное',unique:true},
-  {id:'omegar', n:'⭐ ОМЕГА РКТ',  t:'rocket',   dmg:400,rng:500,rof:0.25,ec:100,p:0,  lv:1, sell:10000,d:'Уникальное',unique:true}
+  // ── BALLISTIC ──
+  {id:'pistol',  n:'ПИСТОЛЕТ МЕХ',  t:'ballistic',dmg:22,  rng:260,rof:1.8, ec:5,  p:0,      lv:1,  sell:0,    d:'Стартовое'},
+  {id:'smg',     n:'АВТОПУШКА-L',   t:'ballistic',dmg:42,  rng:300,rof:1.3, ec:9,  p:400,    lv:5,  sell:200,  d:'Скорострельная'},
+  {id:'cannon',  n:'АВТОПУШКА-H',   t:'ballistic',dmg:85,  rng:340,rof:1.0, ec:15, p:1200,   lv:12, sell:600,  d:'Тяжёлая пушка'},
+  {id:'gauss',   n:'ГАУСС ВИНТОВКА',t:'ballistic',dmg:160, rng:420,rof:0.7, ec:22, p:3500,   lv:22, sell:1750, d:'Снайпер'},
+  {id:'rail',    n:'РЕЛЬСОТРОН',    t:'ballistic',dmg:320, rng:500,rof:0.45,ec:35, p:9000,   lv:35, sell:4500, d:'Пробивает броню'},
+  {id:'magrail', n:'МАГ-РЕЛЬСОТРОН',t:'ballistic',dmg:650, rng:560,rof:0.3, ec:50, p:25000,  lv:52, sell:12500,d:'Усиленная версия'},
+  {id:'godshot', n:'⭐ БОЖ.ВЫСТРЕЛ',t:'ballistic',dmg:1800,rng:650,rof:0.35,ec:60, p:0,      lv:1,  sell:20000,d:'Уникальное — дроп с босса',unique:true},
+  // ── ENERGY ──
+  {id:'l1',      n:'ЛАЗЕР МК1',     t:'energy',   dmg:18,  rng:190,rof:4.0, ec:8,  p:250,    lv:1,  sell:125,  d:'Быстрый луч'},
+  {id:'l2',      n:'ЛАЗЕР МК2',     t:'energy',   dmg:38,  rng:215,rof:3.0, ec:15, p:900,    lv:8,  sell:450,  d:'Улучшенный'},
+  {id:'plasma',  n:'ПЛАЗМА',        t:'energy',   dmg:75,  rng:240,rof:2.0, ec:26, p:2500,   lv:18, sell:1250, d:'Плазменный заряд'},
+  {id:'phazon',  n:'ФАЗОН ЛУЧ',    t:'energy',   dmg:150, rng:270,rof:1.4, ec:40, p:7000,   lv:30, sell:3500, d:'Высший класс'},
+  {id:'arc',     n:'МОЛНИЯ',        t:'energy',   dmg:300, rng:300,rof:1.0, ec:58, p:18000,  lv:45, sell:9000, d:'Цепная молния'},
+  {id:'psibeam', n:'ПСИ-ЛУЧ',      t:'energy',   dmg:700, rng:340,rof:0.7, ec:80, p:55000,  lv:65, sell:27500,d:'Психо-волна'},
+  {id:'voidb',   n:'⭐ ЛУЧ ПУСТОТЫ',t:'energy',   dmg:2000,rng:420,rof:0.9, ec:90, p:0,      lv:1,  sell:22000,d:'Уникальное — дроп с босса',unique:true},
+  // ── ROCKET ──
+  {id:'rpod',    n:'РАКЕТНЫЙ ПОД',  t:'rocket',   dmg:50,  rng:280,rof:1.1, ec:20, p:500,    lv:3,  sell:250,  d:'Сплэш урон'},
+  {id:'napalm',  n:'НАПАЛМ',        t:'rocket',   dmg:95,  rng:315,rof:0.85,ec:32, p:2000,   lv:14, sell:1000, d:'Зажигательный'},
+  {id:'volcano', n:'ВУЛКАН МРЛ',   t:'rocket',   dmg:190, rng:360,rof:0.6, ec:50, p:6000,   lv:26, sell:3000, d:'Тяжёлые ракеты'},
+  {id:'armag',   n:'АРМАГЕДДОН',   t:'rocket',   dmg:380, rng:400,rof:0.4, ec:75, p:16000,  lv:40, sell:8000, d:'Финальный тип'},
+  {id:'nova',    n:'ЯДЕРНАЯ NOVA',  t:'rocket',   dmg:800, rng:450,rof:0.28,ec:100,p:45000,  lv:60, sell:22500,d:'Ядерный взрыв'},
+  {id:'omega_r', n:'⭐ ОМЕГА РАКЕТА',t:'rocket',  dmg:2500,rng:520,rof:0.3, ec:120,p:0,      lv:1,  sell:25000,d:'Уникальное — дроп с босса',unique:true},
 ];
+
+// MODULES: energy (8) + armor/DR (8) + cargo (6) = 22 total
+// Armor modules now give DAMAGE REDUCTION (dr, 0..1) instead of HP
 const MODULES=[
-  {id:'bs', n:'БАТАРЕЯ S',  sl:'en',ep:30, eg:0, p:100,  lv:1, sell:50,  d:'+30 EN'},
-  {id:'bm', n:'БАТАРЕЯ M',  sl:'en',ep:70, eg:0, p:300,  lv:3, sell:150, d:'+70 EN'},
-  {id:'bl', n:'БАТАРЕЯ L',  sl:'en',ep:130,eg:0, p:800,  lv:6, sell:400, d:'+130 EN'},
-  {id:'bxl',n:'БАТАРЕЯ XL', sl:'en',ep:220,eg:0, p:2500, lv:10,sell:1250,d:'+220 EN'},
-  {id:'gs', n:'ГЕНЕРАТОР S',sl:'en',ep:0,  eg:7, p:120,  lv:1, sell:60,  d:'+7 EN/с'},
-  {id:'gm', n:'ГЕНЕРАТОР M',sl:'en',ep:0,  eg:17,p:400,  lv:4, sell:200, d:'+17 EN/с'},
-  {id:'gl', n:'ГЕНЕРАТОР L',sl:'en',ep:0,  eg:30,p:1200, lv:7, sell:600, d:'+30 EN/с'},
-  {id:'gxl',n:'РЕАКТОР',    sl:'en',ep:0,  eg:55,p:5000, lv:12,sell:2500,d:'+55 EN/с'},
-  {id:'als',n:'БРОНЯ ЛЁГК.',sl:'ar',hp:30, inv:0,p:100,  lv:1, sell:50,  d:'+30 HP'},
-  {id:'alm',n:'БРОНЯ СР.',  sl:'ar',hp:80, inv:0,p:350,  lv:3, sell:175, d:'+80 HP'},
-  {id:'alh',n:'БРОНЯ ТЯЖ.', sl:'ar',hp:160,inv:0,p:1100, lv:6, sell:550, d:'+160 HP'},
-  {id:'ala',n:'НАНОБРОНЬ',  sl:'ar',hp:3000,inv:0,p:4000, lv:11,sell:2000,d:'+300 HP'},
-  {id:'cs', n:'ГРУЗ. ОТСЕК',sl:'ar',hp:0, inv:4, p:90,   lv:1, sell:45,  d:'+4 ячейки'},
-  {id:'cm', n:'ГРУЗ. XL',   sl:'ar',hp:0, inv:10,p:280,  lv:4, sell:140, d:'+10 ячеек'},
-  {id:'cl', n:'ГРУЗ. XXL',  sl:'ar',hp:0, inv:20,p:900,  lv:8, sell:450, d:'+20 ячеек'},
-  {id:'cxl',n:'СКЛАД МЕГА', sl:'ar',hp:0, inv:3500,p:3500, lv:13,sell:1750,d:'+35 ячеек'}
+  // ── ENERGY: batteries ──
+  {id:'bs',  n:'БАТАРЕЯ S',    sl:'en',ep:40,  eg:0,  dr:0,inv:0,p:150,   lv:1,  sell:75,   d:'+40 макс. EN'},
+  {id:'bm',  n:'БАТАРЕЯ M',    sl:'en',ep:90,  eg:0,  dr:0,inv:0,p:500,   lv:8,  sell:250,  d:'+90 макс. EN'},
+  {id:'bl',  n:'БАТАРЕЯ L',    sl:'en',ep:180, eg:0,  dr:0,inv:0,p:1800,  lv:18, sell:900,  d:'+180 макс. EN'},
+  {id:'bxl', n:'БАТАРЕЯ XL',   sl:'en',ep:350, eg:0,  dr:0,inv:0,p:6000,  lv:32, sell:3000, d:'+350 макс. EN'},
+  // ── ENERGY: generators ──
+  {id:'gs',  n:'ГЕНЕРАТОР S',  sl:'en',ep:0,   eg:8,  dr:0,inv:0,p:200,   lv:1,  sell:100,  d:'+8 EN/с'},
+  {id:'gm',  n:'ГЕНЕРАТОР M',  sl:'en',ep:0,   eg:20, dr:0,inv:0,p:800,   lv:12, sell:400,  d:'+20 EN/с'},
+  {id:'gl',  n:'ГЕНЕРАТОР L',  sl:'en',ep:0,   eg:40, dr:0,inv:0,p:3000,  lv:25, sell:1500, d:'+40 EN/с'},
+  {id:'gxl', n:'РЕАКТОР',      sl:'en',ep:0,   eg:80, dr:0,inv:0,p:12000, lv:45, sell:6000, d:'+80 EN/с'},
+  {id:'gxx', n:'ТЕРМОЯДЕРНЫЙ', sl:'en',ep:0,   eg:150,dr:0,inv:0,p:40000, lv:70, sell:20000,d:'+150 EN/с'},
+  // ── ARMOR: damage reduction ──
+  // dr = fraction of damage blocked (0.05 = 5%)
+  {id:'als', n:'ЗАЩИТА ЛЁГК.',  sl:'ar',ep:0,   eg:0,  dr:.05,inv:0,p:200,   lv:1,  sell:100,  d:'-5% получаемого урона'},
+  {id:'alm', n:'ЗАЩИТА СР.',    sl:'ar',ep:0,   eg:0,  dr:.10,inv:0,p:700,   lv:8,  sell:350,  d:'-10% урона'},
+  {id:'alh', n:'БРОНЯ ТЯЖЁЛ.',  sl:'ar',ep:0,   eg:0,  dr:.15,inv:0,p:2500,  lv:18, sell:1250, d:'-15% урона'},
+  {id:'ala', n:'НАНОБРОНЬ',     sl:'ar',ep:0,   eg:0,  dr:.22,inv:0,p:8000,  lv:32, sell:4000, d:'-22% урона'},
+  {id:'ald', n:'АДАМАНТИН',     sl:'ar',ep:0,   eg:0,  dr:.30,inv:0,p:25000, lv:50, sell:12500,d:'-30% урона'},
+  {id:'alg', n:'КВАНТОВЫЙ ЩИТ', sl:'ar',ep:0,   eg:0,  dr:.40,inv:0,p:80000, lv:75, sell:40000,d:'-40% урона'},
+  // ── CARGO ──
+  {id:'cs',  n:'ГРУЗ. ОТСЕК',   sl:'ar',ep:0,   eg:0,  dr:0,inv:5,  p:120,   lv:1,  sell:60,   d:'+5 ячеек инвентаря'},
+  {id:'cm',  n:'ГРУЗ. XL',      sl:'ar',ep:0,   eg:0,  dr:0,inv:12, p:450,   lv:10, sell:225,  d:'+12 ячеек'},
+  {id:'cl',  n:'ГРУЗ. XXL',     sl:'ar',ep:0,   eg:0,  dr:0,inv:25, p:1500,  lv:22, sell:750,  d:'+25 ячеек'},
+  {id:'cxl', n:'СКЛАД МЕГА',    sl:'ar',ep:0,   eg:0,  dr:0,inv:50, p:6000,  lv:40, sell:3000, d:'+50 ячеек'},
 ];
+
 const MECHS=[
-  {id:'scout',  n:'SCOUT-1',  bhp:100,p:0,    lv:1, sell:0,   d:'Лёгкий стартовый'},
-  {id:'viper',  n:'VIPER-2',  bhp:160,p:1500, lv:4, sell:750, d:'Скоростной боец'},
-  {id:'assault',n:'ASSAULT-5',bhp:260,p:4000, lv:7, sell:2000,d:'Сбалансированный'},
-  {id:'titan',  n:'TITAN-9',  bhp:440000,p:100000,lv:11,sell:5000,d:'Тяжёлая крепость'},
-  {id:'omegam', n:'OMEGA-X',  bhp:700000,p:300000,lv:16,sell:15000,d:'Легендарный'}
+  {id:'scout',  n:'SCOUT-1',   bhp:150,  p:0,      lv:1,  sell:0,    d:'Лёгкий стартовый'},
+  {id:'viper',  n:'VIPER-2',   bhp:280,  p:2000,   lv:10, sell:1000, d:'Скоростной боец'},
+  {id:'assault',n:'ASSAULT-5', bhp:500,  p:8000,   lv:20, sell:4000, d:'Сбалансированный'},
+  {id:'titan',  n:'TITAN-9',   bhp:900,  p:25000,  lv:35, sell:12500,d:'Тяжёлая крепость'},
+  {id:'dreadnought',n:'DREAD-X',bhp:1600,p:80000,  lv:55, sell:40000,d:'Линкор'},
+  {id:'omegam', n:'OMEGA-X',   bhp:3000, p:250000, lv:80, sell:125000,d:'Легендарный'}
 ];
 
 // ═══════════════════════════════════
@@ -432,13 +462,32 @@ let G={
 // ═══════════════════════════════════
 function calcStats(){
   const p=G.p;
-  let hp=MECHS.find(m=>m.id===p.mech).bhp;let en=60,er=5,inv=8;
-  for(const s of p.arSl){if(s){const m=MODULES.find(x=>x.id===s);if(m){hp+=m.hp||0;inv+=m.inv||0;}}}
-  for(const s of p.enSl){if(s){const m=MODULES.find(x=>x.id===s);if(m){en+=m.ep||0;er+=m.eg||0;}}}
-  hp=Math.round(hp*(1+p.sk.arm*.08));en=Math.round(en*(1+p.sk.ens*.1));
-  er=Math.round(er*(1+p.sk.ens*.1)*10)/10;inv+=p.sk.crg*2;
+  let hp=MECHS.find(m=>m.id===p.mech).bhp;
+  let en=60,er=5,inv=8,dr=0;
+  // armor slots: DR + cargo (no HP from armor anymore)
+  for(const s of p.arSl){
+    if(s){
+      const mod=MODULES.find(x=>x.id===s);
+      if(mod){dr+=mod.dr||0;inv+=mod.inv||0;}
+    }
+  }
+  // energy slots
+  for(const s of p.enSl){
+    if(s){
+      const mod=MODULES.find(x=>x.id===s);
+      if(mod){en+=mod.ep||0;er+=mod.eg||0;}
+    }
+  }
+  // skills
+  hp=Math.round(hp*(1+p.sk.arm*.06));    // arm skill: +6% HP per level
+  en=Math.round(en*(1+p.sk.ens*.1));
+  er=Math.round(er*(1+p.sk.ens*.1)*10)/10;
+  inv+=p.sk.crg*3;
+  dr=Math.min(0.75, dr + p.sk.arm*0.01); // arm skill also adds 1% DR per level, cap 75%
   p.maxHp=hp;p.maxEn=en;p.enRegen=er;p.invMax=inv;
-  p.hp=Math.min(p.hp,hp);p.en=Math.min(p.en,en);updFBtns();
+  p.dr=Math.round(dr*100)/100; // damage reduction 0..0.75
+  p.hp=Math.min(p.hp,hp);p.en=Math.min(p.en,en);
+  updFBtns();
 }
 function updFBtns(){
   const WICONS={ballistic:'🔫',energy:'⚡',rocket:'🚀'};
@@ -467,50 +516,69 @@ function genWorld(){
   CHUNKS.clear();
   G.mons=[];G.boss=null;G.projs=[];G.parts=[];G.portals=[];G.spawnTimer=5;G.zone_entered=false;
   document.getElementById('bbar').style.display='none';
-  for(let i=0;i<500+G.zone*160;i++)spawnMon(true);
+  // DOUBLED monster count
+  for(let i=0;i<1000+G.zone*300;i++)spawnMon(true);
   placeBoss();
-  // turrets at each gate entrance
   const mx=Math.floor(SZ_X+SZ_W/2),my=Math.floor(SZ_Y+SZ_H/2);
   G.turrets=[
-    {wx:SZ_X-3,   wy:my,    shootT:0,range:6,dmg:30+G.zone*10},
-    {wx:SZ_X+SZ_W+2, wy:my, shootT:0,range:6,dmg:30+G.zone*10},
-    {wx:mx,       wy:SZ_Y-3,  shootT:0,range:6,dmg:30+G.zone*10},
-    {wx:mx,       wy:SZ_Y+SZ_H+2,shootT:0,range:6,dmg:30+G.zone*10}
+    {wx:SZ_X-3,      wy:my,           shootT:0,range:6,dmg:80+G.zone*40},
+    {wx:SZ_X+SZ_W+2, wy:my,           shootT:0,range:6,dmg:80+G.zone*40},
+    {wx:mx,          wy:SZ_Y-3,       shootT:0,range:6,dmg:80+G.zone*40},
+    {wx:mx,          wy:SZ_Y+SZ_H+2,  shootT:0,range:6,dmg:80+G.zone*40}
   ];
-  // NPC inside safe zone — trader + mechanic
   G.npcs=[
     {wx:SZ_X+4,  wy:SZ_Y+4,  name:'ТОРГОВЕЦ', col:'#40c020', type:'trader'},
     {wx:SZ_X+11, wy:SZ_Y+4,  name:'МЕХАНИК',  col:'#40a0e0', type:'mechanic'}
   ];
-  // portals — forward + BACK PORTAL INSIDE SAFE ZONE
   if(G.zone<2){
     G.portals.push({wx:WW-25,wy:WH/2,toZone:G.zone+1,col:ZONES[G.zone+1].acc,back:false});
     G.portals.push({wx:WW/2,wy:WH-25,toZone:G.zone+1,col:ZONES[G.zone+1].acc,back:false});
   }
   if(G.zone>0){
     G.portals.push({wx:25,wy:WH/2,toZone:G.zone-1,col:ZONES[G.zone-1].acc,back:true});
-    // back portal also inside safe zone
     G.portals.push({wx:SZ_X+SZ_W/2,wy:SZ_Y+SZ_H-3,toZone:G.zone-1,col:ZONES[G.zone-1].acc,back:true,inSZ:true});
   }
 }
+
+// Level ranges per zone: city 1-30, wastes 30-70, ruins 70-110
+// Distribution: near safe zone = low end, near boss corner (WW-50,WH-50) = high end
+const ZONE_LV=[[1,30],[30,70],[70,110]];
 
 function spawnMon(initial=false){
   const z=ZONES[G.zone];
   let wx,wy,tries=0;
   do{wx=5+Math.random()*(WW-10);wy=5+Math.random()*(WH-10);tries++;}
   while(tries<30&&(isBlocked(wx,wy)||inSafeZone(wx,wy)||(!initial&&Math.hypot(wx-G.p.wx,wy-G.p.wy)<30)));
+
+  // monster level based on distance from safe zone center toward boss corner
+  const safeCX=SZ_X+SZ_W/2,safeCY=SZ_Y+SZ_H/2;
+  const bossCX=WW-50,bossCY=WH-50;
+  const maxDist=Math.hypot(bossCX-safeCX,bossCY-safeCY);
+  const dist=Math.hypot(wx-safeCX,wy-safeCY);
+  const t01=Math.min(1,dist/maxDist);
+  const [lvMin,lvMax]=ZONE_LV[G.zone];
+  const monLv=Math.round(lvMin+(lvMax-lvMin)*t01);
+
   const mt=z.mon[Math.floor(Math.random()*z.mon.length)];
-  const lm=1+G.zone*.6+G.p.lvl*.08;
   const roll=Math.random();
   const tier=roll<0.05?2:roll<0.15?1:0;
-  const tm=tier===2?10:tier===1?5:1;
-  const bHp=Math.round((18+Math.random()*32)*lm*tm);
-  G.mons.push({wx,wy,hp:bHp,maxHp:bHp,type:mt,
-    spd:.04+Math.random()*.03+G.zone*.008,
-    xp:Math.round((12+G.zone*6)*tm),
+  const tierMult=tier===2?10:tier===1?5:1;
+
+  // HP and atk scale with monster level
+  const hpBase=15+monLv*8;
+  const atkBase=2+monLv*1.5;
+  const xpBase=monLv*4;
+
+  G.mons.push({wx,wy,
+    hp:Math.round(hpBase*tierMult*(1+Math.random()*.3)),
+    maxHp:Math.round(hpBase*tierMult),
+    monLv, type:mt,
+    spd:.035+monLv*.0008+G.zone*.005,
+    xp:Math.round(xpBase*tierMult),
     loot:z.loot[Math.floor(Math.random()*z.loot.length)],
-    lootMult:tm,tier,atk:Math.round((3+G.zone*2+G.p.lvl*.3)*tm),
-    atkT:0,aggroed:false,aggroRange:12+tier*4,
+    lootMult:tierMult,tier,
+    atk:Math.round(atkBase*tierMult),
+    atkT:0,aggroed:false,aggroRange:10+tier*5,
     facing:Math.random()*Math.PI*2,walk:Math.random()*Math.PI*2,
     deathAnim:0,dead:false});
 }
@@ -972,7 +1040,7 @@ function drawNPCSprite(n){
 
 function repairCost(){
   const p=G.p;const missing=p.maxHp-p.hp;
-  return Math.max(1,Math.round(missing*0.0005*(1+G.zone*0.003)));
+  return Math.max(10,Math.round(missing*0.0005*(1+G.zone*0.3)));
 }
 
 // ═══════════════════════════════════
@@ -1551,4 +1619,3 @@ document.addEventListener('keyup',e=>{if(e.key==='a'||e.key==='d'||e.key==='Arro
 </script>
 </body>
 </html>
- 
