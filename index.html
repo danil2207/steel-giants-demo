@@ -972,7 +972,7 @@ function drawNPCSprite(n){
 
 function repairCost(){
   const p=G.p;const missing=p.maxHp-p.hp;
-  return Math.max(10,Math.round(missing*0.0005*(1+G.zone*0.3)));
+  return Math.max(1,Math.round(missing*0.0005*(1+G.zone*0.003)));
 }
 
 // ═══════════════════════════════════
