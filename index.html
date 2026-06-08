@@ -149,16 +149,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#1a1a0e;touch-action
   text-transform:uppercase;font-weight:bold;font-family:'Courier New',monospace;
   border-bottom:2px solid #c8b870;padding-bottom:4px}
 
-/* SHOP CATEGORY TABS */
-.scatbar{display:flex;gap:5px;overflow-x:auto;padding:2px 0 8px;margin-bottom:2px;-webkit-overflow-scrolling:touch}
-.scatbar::-webkit-scrollbar{height:0}
-.scat{flex:0 0 auto;font-family:'Courier New',monospace;font-size:9px;font-weight:bold;
-  color:#7a6020;background:linear-gradient(135deg,#fff8e0,#efe2b0);
-  border:1px solid #c8a830;border-radius:18px;padding:6px 11px;cursor:pointer;white-space:nowrap;
-  box-shadow:0 2px 5px #00000014;transition:transform .08s}
-.scat:active{transform:scale(.94)}
-.scat.on{color:#fff;background:linear-gradient(135deg,#c08020,#8a5010);border-color:#8a5010;box-shadow:0 3px 8px #a0601055}
-
 /* ITEM CARD — 3D card look */
 .icard{background:linear-gradient(135deg,#ffffff,#f4f0e0);
   border:1px solid #d4c890;border-radius:12px;padding:10px 12px;margin-bottom:8px;
@@ -1424,7 +1414,6 @@ function loop(ts){
 // PANELS
 // ═══════════════════════════════════
 let curTab='inv';
-let shopCat='ballistic';
 function op(tab){document.getElementById('panel').style.display='flex';sw(tab||curTab);}
 function sw(tab){curTab=tab;['inv','mech','shop'].forEach(t=>document.getElementById('t-'+t).classList.toggle('on',t===tab));if(tab==='inv')rInv();else if(tab==='mech')rMech();else rShop();}
 function cp(){document.getElementById('panel').style.display='none';}
@@ -1497,25 +1486,31 @@ function rShop(){
   if(!nearTrader){b.innerHTML=h;return;}
   h+=`<div style="background:linear-gradient(135deg,#fff8e0,#f4e8a0);border:1px solid #c8a830;border-radius:12px;padding:10px 14px;margin-bottom:10px;box-shadow:0 2px 8px #c8a83033"><div style="font-size:12px;color:#604010;font-weight:bold">💰 Кредиты: ${p.cr} CR</div><div style="font-size:9px;color:#8a7040">LVL ${p.lvl} · Нажми чтобы купить</div></div>`;
   const mkC=(item,type,can,own,lk,buyFn)=>{return`<div class="icard ${own?'owned':''} ${lk?'locked':''}" onclick="${can?buyFn:'void 0'}"><span class="ilvl ${lk?'no':'ok'}">LV${item.lv}</span><div class="iname">${item.n||item.name}${own?' ✓':''}</div><div class="istat">${type==='w'?item.t.toUpperCase()+' ·D:'+item.dmg+' ·R:'+item.rng+' ·ROF:'+item.rof+' ·EN:'+item.ec+' — '+item.d:item.d}</div><div class="iprice">${item.p===0?'<span style="color:#40a020">БЕСПЛАТНО</span>':item.p+' CR'} ${lk?`<span style="color:#c03020">🔒 LV${item.lv}</span>`:can?`<span style="color:#408020">→ КУПИТЬ</span>`:own?`<span style="color:#808040">✓ Есть</span>`:`<span style="color:#907030">Мало CR</span>`}</div></div>`;};
-  // category tabs
-  const cats=[['ballistic','🔫','Баллистика'],['energy','⚡','Энергия'],['rocket','🚀','Ракеты'],['modules','🛠','Модули'],['mechs','🤖','Мехи']];
-  h+=`<div class="scatbar">`+cats.map(c=>`<button class="scat ${shopCat===c[0]?'on':''}" onclick="setShopCat('${c[0]}')">${c[1]} ${c[2]}</button>`).join('')+`</div>`;
-  if(shopCat==='ballistic'||shopCat==='energy'||shopCat==='rocket'){
-    const wl=WEAPONS.filter(x=>!x.unique&&x.t===shopCat);
-    h+=`<div class="psec">${cats.find(c=>c[0]===shopCat)[1]} ${cats.find(c=>c[0]===shopCat)[2]}</div>`;
-    for(const w of wl){const lk=p.lvl<w.lv;const can=!lk&&p.cr>=w.p;h+=mkC(w,'w',can,false,lk,`sW('${w.id}')`);}
-  }else if(shopCat==='modules'){
-    h+=`<div class="psec">⚡ Энергомодули</div>`;
-    for(const m of MODULES.filter(x=>x.sl==='en')){const lk=p.lvl<m.lv;const can=!lk&&p.cr>=m.p;h+=mkC(m,'m',can,false,lk,`sM('${m.id}')`);}
-    h+=`<div class="psec">🛡 Броня / Трюм</div>`;
-    for(const m of MODULES.filter(x=>x.sl==='ar')){const lk=p.lvl<m.lv;const can=!lk&&p.cr>=m.p;h+=mkC(m,'m',can,false,lk,`sM('${m.id}')`);}
-  }else if(shopCat==='mechs'){
-    h+=`<div class="psec">🤖 Мехи</div>`;
-    for(const mc of MECHS){const own=p.mech===mc.id||p.inv.some(x=>x.type==='mech'&&x.id===mc.id);const lk=p.lvl<mc.lv;const can=!own&&!lk&&(mc.p===0||p.cr>=mc.p);h+=`<div class="icard ${own?'owned':''} ${lk?'locked':''}" onclick="${can?`sMc('${mc.id}')`:'void 0'}"><span class="ilvl ${lk?'no':'ok'}">LV${mc.lv}</span><div class="iname">${mc.n}${own?' ✓':''}</div><div class="istat">${mc.d} · Базовый HP: ${mc.bhp}</div><div class="iprice">${mc.p===0?'<span style="color:#40a020">БЕСПЛАТНО</span>':mc.p+' CR'} ${lk?`<span style="color:#c03020">🔒 LV${mc.lv}</span>`:can?`<span style="color:#408020">→ КУПИТЬ</span>`:own?`<span style="color:#808040">✓ Активен</span>`:`<span style="color:#907030">Мало CR</span>`}</div></div>`;}
+  h+=`<div class="psec">🔫 Оружие</div>`;
+  for(const w of WEAPONS.filter(x=>!x.unique)){
+  const own=false;
+  const lk=p.lvl<w.lv;
+  const can=!lk&&p.cr>=w.p;
+  h+=mkC(w,'w',can,own,lk,`sW('${w.id}')`);
   }
+  h+=`<div class="psec">⚡ Энергомодули</div>`;
+  for(const m of MODULES.filter(x=>x.sl==='en')){
+  const ins=false;
+  const lk=p.lvl<m.lv;
+  const can=!lk&&p.cr>=m.p;
+  h+=mkC(m,'m',can,ins,lk,`sM('${m.id}')`);
+  }
+  h+=`<div class="psec">🛡 Броня / Трюм</div>`;
+  for(const m of MODULES.filter(x=>x.sl==='ar')){
+  const ins=false;
+  const lk=p.lvl<m.lv;
+  const can=!lk&&p.cr>=m.p;
+  h+=mkC(m,'m',can,ins,lk,`sM('${m.id}')`);
+  }
+  h+=`<div class="psec">🤖 Мехи</div>`;
+  for(const mc of MECHS){const own=p.mech===mc.id||p.inv.some(x=>x.type==='mech'&&x.id===mc.id);const lk=p.lvl<mc.lv;const can=!own&&!lk&&(mc.p===0||p.cr>=mc.p);h+=`<div class="icard ${own?'owned':''} ${lk?'locked':''}" onclick="${can?`sMc('${mc.id}')`:'void 0'}"><span class="ilvl ${lk?'no':'ok'}">LV${mc.lv}</span><div class="iname">${mc.n}${own?' ✓':''}</div><div class="istat">${mc.d} · Базовый HP: ${mc.bhp}</div><div class="iprice">${mc.p===0?'<span style="color:#40a020">БЕСПЛАТНО</span>':mc.p+' CR'} ${lk?`<span style="color:#c03020">🔒 LV${mc.lv}</span>`:can?`<span style="color:#408020">→ КУПИТЬ</span>`:own?`<span style="color:#808040">✓ Активен</span>`:`<span style="color:#907030">Мало CR</span>`}</div></div>`;}
   b.innerHTML=h;
 }
-function setShopCat(c){shopCat=c;rShop();}
 function sW(id){const p=G.p,w=WEAPONS.find(x=>x.id===id);if(p.cr<w.p)return notify('Мало CR!');p.cr-=w.p;const sl=p.w.indexOf(null);if(sl!==-1){p.w[sl]=id;calcStats();notify('✓ '+w.n);}else if(p.inv.length<p.invMax){p.inv.push({type:'weapon',id,name:w.n});notify('→ инвентарь: '+w.n);}else{p.cr+=w.p;return notify('Нет места!');}updHUD();rShop();}
 function sM(id){const p=G.p,m=MODULES.find(x=>x.id===id);if(p.cr<m.p)return notify('Мало CR!');p.cr-=m.p;const arr=m.sl==='en'?p.enSl:p.arSl;const sl=arr.indexOf(null);if(sl!==-1){arr[sl]=id;calcStats();notify('✓ '+m.n);}else if(p.inv.length<p.invMax){p.inv.push({type:'module',id,name:m.n});notify('→ инвентарь: '+m.n);}else{p.cr+=m.p;return notify('Нет места!');}updHUD();rShop();}
 function sMc(id){const p=G.p,mc=MECHS.find(x=>x.id===id);if(p.cr<mc.p)return notify('Мало CR!');p.cr-=mc.p;p.mech=id;calcStats();notify('✓ '+mc.n);updHUD();rShop();}
