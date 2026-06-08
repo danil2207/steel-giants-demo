@@ -149,6 +149,16 @@ html,body{width:100%;height:100%;overflow:hidden;background:#1a1a0e;touch-action
   text-transform:uppercase;font-weight:bold;font-family:'Courier New',monospace;
   border-bottom:2px solid #c8b870;padding-bottom:4px}
 
+/* SHOP CATEGORY TABS */
+.scatbar{display:flex;gap:5px;overflow-x:auto;padding:2px 0 8px;margin-bottom:2px;-webkit-overflow-scrolling:touch}
+.scatbar::-webkit-scrollbar{height:0}
+.scat{flex:0 0 auto;font-family:'Courier New',monospace;font-size:9px;font-weight:bold;
+  color:#7a6020;background:linear-gradient(135deg,#fff8e0,#efe2b0);
+  border:1px solid #c8a830;border-radius:18px;padding:6px 11px;cursor:pointer;white-space:nowrap;
+  box-shadow:0 2px 5px #00000014;transition:transform .08s}
+.scat:active{transform:scale(.94)}
+.scat.on{color:#fff;background:linear-gradient(135deg,#c08020,#8a5010);border-color:#8a5010;box-shadow:0 3px 8px #a0601055}
+
 /* ITEM CARD — 3D card look */
 .icard{background:linear-gradient(135deg,#ffffff,#f4f0e0);
   border:1px solid #d4c890;border-radius:12px;padding:10px 12px;margin-bottom:8px;
@@ -368,76 +378,151 @@ const LOOT_P={
   'Плата':25,'Схема':35,'Лом':15,'Масло':20,'Кость':22,
   'Клешня':50,'Яд':85,'Панцирь':65,'Клык':45,'Кристалл':80,
   'КристаллРуин':110,'Осколок':140,'Чип':100,'Ядро':130,'Тень':160,
-  'МатрицаИИ':450,'ЖетонСтражника':320,'СхемаTitan':550,
-  'ЯдТитана':650,'ПанцирьБосса':520,'ЯдроПустыни':750,
-  'ЯдроПустоты':950,'ФрагментКолосса':800,'СхемаБога':1300,
-  'БОС-КОР':600,'РЕД-СПЛАВ':500,'КВАНТ':700
+  'МатрицаИИ':500,'ЖетонСтражника':350,'СхемаTitan':600,
+  'ЯдТитана':700,'ПанцирьБосса':580,'ЯдроПустыни':820,
+  'ЯдроПустоты':1000,'ФрагментКолосса':850,'СхемаБога':1400,
+  'БОС-КОР':650,'РЕД-СПЛАВ':550,'КВАНТ':750
 };
 
-// WEAPONS: 7 per type × 3 types = 21 + 3 unique = 24 total
-// levels spread 1-90 per type, dmg/ec scale exponentially
+// ── WEAPONS: ballistic (lv 1,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95)
+// energy (lv 1,6,11,16,21,27,33,39,46,53,61,69,77,86,95)
+// rocket (lv 2,7,13,19,26,32,38,45,52,59,67,75,83,92)
+// Prices /10 for easy testing
 const WEAPONS=[
-  // ── BALLISTIC ──
-  {id:'pistol',  n:'ПИСТОЛЕТ МЕХ',  t:'ballistic',dmg:22,  rng:260,rof:1.8, ec:5,  p:0,      lv:1,  sell:0,    d:'Стартовое'},
-  {id:'smg',     n:'АВТОПУШКА-L',   t:'ballistic',dmg:42,  rng:300,rof:1.3, ec:9,  p:400,    lv:5,  sell:200,  d:'Скорострельная'},
-  {id:'cannon',  n:'АВТОПУШКА-H',   t:'ballistic',dmg:85,  rng:340,rof:1.0, ec:15, p:1200,   lv:12, sell:600,  d:'Тяжёлая пушка'},
-  {id:'gauss',   n:'ГАУСС ВИНТОВКА',t:'ballistic',dmg:160, rng:420,rof:0.7, ec:22, p:3500,   lv:22, sell:1750, d:'Снайпер'},
-  {id:'rail',    n:'РЕЛЬСОТРОН',    t:'ballistic',dmg:320, rng:500,rof:0.45,ec:35, p:9000,   lv:35, sell:4500, d:'Пробивает броню'},
-  {id:'magrail', n:'МАГ-РЕЛЬСОТРОН',t:'ballistic',dmg:650, rng:560,rof:0.3, ec:50, p:25000,  lv:52, sell:12500,d:'Усиленная версия'},
-  {id:'godshot', n:'⭐ БОЖ.ВЫСТРЕЛ',t:'ballistic',dmg:1800,rng:650,rof:0.35,ec:60, p:0,      lv:1,  sell:20000,d:'Уникальное — дроп с босса',unique:true},
-  // ── ENERGY ──
-  {id:'l1',      n:'ЛАЗЕР МК1',     t:'energy',   dmg:18,  rng:190,rof:4.0, ec:8,  p:250,    lv:1,  sell:125,  d:'Быстрый луч'},
-  {id:'l2',      n:'ЛАЗЕР МК2',     t:'energy',   dmg:38,  rng:215,rof:3.0, ec:15, p:900,    lv:8,  sell:450,  d:'Улучшенный'},
-  {id:'plasma',  n:'ПЛАЗМА',        t:'energy',   dmg:75,  rng:240,rof:2.0, ec:26, p:2500,   lv:18, sell:1250, d:'Плазменный заряд'},
-  {id:'phazon',  n:'ФАЗОН ЛУЧ',    t:'energy',   dmg:150, rng:270,rof:1.4, ec:40, p:7000,   lv:30, sell:3500, d:'Высший класс'},
-  {id:'arc',     n:'МОЛНИЯ',        t:'energy',   dmg:300, rng:300,rof:1.0, ec:58, p:18000,  lv:45, sell:9000, d:'Цепная молния'},
-  {id:'psibeam', n:'ПСИ-ЛУЧ',      t:'energy',   dmg:700, rng:340,rof:0.7, ec:80, p:55000,  lv:65, sell:27500,d:'Психо-волна'},
-  {id:'voidb',   n:'⭐ ЛУЧ ПУСТОТЫ',t:'energy',   dmg:2000,rng:420,rof:0.9, ec:90, p:0,      lv:1,  sell:22000,d:'Уникальное — дроп с босса',unique:true},
-  // ── ROCKET ──
-  {id:'rpod',    n:'РАКЕТНЫЙ ПОД',  t:'rocket',   dmg:50,  rng:280,rof:1.1, ec:20, p:500,    lv:3,  sell:250,  d:'Сплэш урон'},
-  {id:'napalm',  n:'НАПАЛМ',        t:'rocket',   dmg:95,  rng:315,rof:0.85,ec:32, p:2000,   lv:14, sell:1000, d:'Зажигательный'},
-  {id:'volcano', n:'ВУЛКАН МРЛ',   t:'rocket',   dmg:190, rng:360,rof:0.6, ec:50, p:6000,   lv:26, sell:3000, d:'Тяжёлые ракеты'},
-  {id:'armag',   n:'АРМАГЕДДОН',   t:'rocket',   dmg:380, rng:400,rof:0.4, ec:75, p:16000,  lv:40, sell:8000, d:'Финальный тип'},
-  {id:'nova',    n:'ЯДЕРНАЯ NOVA',  t:'rocket',   dmg:800, rng:450,rof:0.28,ec:100,p:45000,  lv:60, sell:22500,d:'Ядерный взрыв'},
-  {id:'omega_r', n:'⭐ ОМЕГА РАКЕТА',t:'rocket',  dmg:2500,rng:520,rof:0.3, ec:120,p:0,      lv:1,  sell:25000,d:'Уникальное — дроп с босса',unique:true},
+  // BALLISTIC (20 items, lv1→95)
+  {id:'p1',n:'ПИСТОЛЕТ-1',    t:'ballistic',dmg:22,  rng:240,rof:1.8, ec:5,  p:0,    lv:1, sell:0,   d:'Стартовый'},
+  {id:'p2',n:'М9 ШТУРМ',      t:'ballistic',dmg:38,  rng:260,rof:1.6, ec:8,  p:60,   lv:5, sell:30,  d:'Скорострельный'},
+  {id:'p3',n:'АК-МЕХ',        t:'ballistic',dmg:58,  rng:280,rof:1.4, ec:11, p:160,  lv:10,sell:80,  d:'Штурмовой'},
+  {id:'p4',n:'ПАК-44',        t:'ballistic',dmg:85,  rng:300,rof:1.2, ec:15, p:350,  lv:15,sell:175, d:'Усиленный'},
+  {id:'p5',n:'ПУЛЕМЁТ-Л',     t:'ballistic',dmg:120, rng:315,rof:1.0, ec:19, p:700,  lv:20,sell:350, d:'Высокий темп'},
+  {id:'p6',n:'ПУЛЕМЁТ-Х',     t:'ballistic',dmg:165, rng:330,rof:0.9, ec:23, p:1400, lv:25,sell:700, d:'Тяжёлый'},
+  {id:'p7',n:'АВТОПУШКА-L',   t:'ballistic',dmg:220, rng:345,rof:0.8, ec:28, p:2500, lv:30,sell:1250,d:'Мощная'},
+  {id:'p8',n:'АВТОПУШКА-H',   t:'ballistic',dmg:290, rng:360,rof:0.7, ec:33, p:4000, lv:35,sell:2000,d:'Тяжёлая пушка'},
+  {id:'p9',n:'ГАУСС МК1',     t:'ballistic',dmg:380, rng:390,rof:0.6, ec:39, p:7000, lv:40,sell:3500,d:'Магнитный'},
+  {id:'p10',n:'ГАУСС МК2',    t:'ballistic',dmg:490, rng:420,rof:0.55,ec:46, p:11000,lv:45,sell:5500,d:'Снайпер'},
+  {id:'p11',n:'РЕЛЬСОТРОН-S', t:'ballistic',dmg:640, rng:450,rof:0.5, ec:54, p:18000,lv:50,sell:9000,d:'Рельсовый'},
+  {id:'p12',n:'РЕЛЬСОТРОН-М', t:'ballistic',dmg:820, rng:475,rof:0.45,ec:63, p:28000,lv:55,sell:14000,d:'Мощнее'},
+  {id:'p13',n:'РЕЛЬСОТРОН-Х', t:'ballistic',dmg:1050,rng:500,rof:0.4, ec:73, p:44000,lv:60,sell:22000,d:'Экстремальный'},
+  {id:'p14',n:'МАГ-РЕЛЬС-1',  t:'ballistic',dmg:1350,rng:525,rof:0.35,ec:85, p:70000,lv:65,sell:35000,d:'Магнитный рельс'},
+  {id:'p15',n:'МАГ-РЕЛЬС-2',  t:'ballistic',dmg:1700,rng:550,rof:0.3, ec:98, p:110000,lv:70,sell:55000,d:'Усиленный'},
+  {id:'p16',n:'КВАЗАР-ПУШ',   t:'ballistic',dmg:2150,rng:570,rof:0.26,ec:113,p:170000,lv:75,sell:85000,d:'Ионный'},
+  {id:'p17',n:'ВОРТЕКС',      t:'ballistic',dmg:2700,rng:590,rof:0.22,ec:130,p:260000,lv:80,sell:130000,d:'Гравитационный'},
+  {id:'p18',n:'АННИГИЛЯТОР',  t:'ballistic',dmg:3400,rng:610,rof:0.18,ec:150,p:400000,lv:85,sell:200000,d:'Уничтожает всё'},
+  {id:'p19',n:'ГИПЕРИОН',     t:'ballistic',dmg:4300,rng:630,rof:0.15,ec:172,p:620000,lv:90,sell:310000,d:'Гиперзвуковой'},
+  {id:'p20',n:'АПОФЕОЗ',      t:'ballistic',dmg:5500,rng:650,rof:0.12,ec:198,p:950000,lv:95,sell:475000,d:'Абсолютное орудие'},
+  // ENERGY (15 items, lv1→95)
+  {id:'e1',n:'ЛАЗЕР МК1',     t:'energy',   dmg:18,  rng:180,rof:4.0, ec:8,  p:40,   lv:1, sell:20,  d:'Быстрый луч'},
+  {id:'e2',n:'ЛАЗЕР МК2',     t:'energy',   dmg:34,  rng:196,rof:3.5, ec:13, p:130,  lv:6, sell:65,  d:'Улучшенный'},
+  {id:'e3',n:'ЛАЗЕР МК3',     t:'energy',   dmg:58,  rng:212,rof:3.0, ec:19, p:330,  lv:11,sell:165, d:'Мощный'},
+  {id:'e4',n:'ПЛАЗМА МК1',    t:'energy',   dmg:90,  rng:228,rof:2.5, ec:27, p:700,  lv:16,sell:350, d:'Плазменный'},
+  {id:'e5',n:'ПЛАЗМА МК2',    t:'energy',   dmg:135, rng:242,rof:2.1, ec:37, p:1500, lv:21,sell:750, d:'Усиленная плазма'},
+  {id:'e6',n:'ФАЗОН МК1',     t:'energy',   dmg:200, rng:256,rof:1.8, ec:49, p:3000, lv:27,sell:1500,d:'Фазовый луч'},
+  {id:'e7',n:'ФАЗОН МК2',     t:'energy',   dmg:290, rng:268,rof:1.5, ec:63, p:6000, lv:33,sell:3000,d:'Мощнее'},
+  {id:'e8',n:'МОЛНИЯ МК1',    t:'energy',   dmg:420, rng:280,rof:1.2, ec:80, p:11000,lv:39,sell:5500,d:'Цепная молния'},
+  {id:'e9',n:'МОЛНИЯ МК2',    t:'energy',   dmg:600, rng:292,rof:1.0, ec:100,p:20000,lv:46,sell:10000,d:'Дуговой разряд'},
+  {id:'e10',n:'ПСИ-ЛУЧ МК1',  t:'energy',   dmg:860, rng:305,rof:0.85,ec:123,p:35000,lv:53,sell:17500,d:'Психо-энергия'},
+  {id:'e11',n:'ПСИ-ЛУЧ МК2',  t:'energy',   dmg:1230,rng:318,rof:0.72,ec:150,p:60000,lv:61,sell:30000,d:'Усиленный пси'},
+  {id:'e12',n:'ЛУЧ ПУСТОТЫ',  t:'energy',   dmg:1750,rng:332,rof:0.6, ec:182,p:105000,lv:69,sell:52500,d:'Энергия пустоты'},
+  {id:'e13',n:'НОВА-ЛУЧ',     t:'energy',   dmg:2500,rng:346,rof:0.5, ec:220,p:180000,lv:77,sell:90000,d:'Взрыв энергии'},
+  {id:'e14',n:'ФОТОН-ЛУЧ',    t:'energy',   dmg:3500,rng:360,rof:0.4, ec:265,p:310000,lv:86,sell:155000,d:'Световой удар'},
+  {id:'e15',n:'ОМЕГА-ЛУЧ',    t:'energy',   dmg:5000,rng:375,rof:0.32,ec:320,p:540000,lv:95,sell:270000,d:'Абсолютный'},
+  // ROCKET (14 items, lv2→92)
+  {id:'r1',n:'РКТ-ПОД МК1',   t:'rocket',   dmg:45,  rng:260,rof:1.1, ec:18, p:70,   lv:2, sell:35,  d:'Базовый сплэш'},
+  {id:'r2',n:'РКТ-ПОД МК2',   t:'rocket',   dmg:78,  rng:278,rof:0.95,ec:26, p:200,  lv:7, sell:100, d:'Мощнее'},
+  {id:'r3',n:'КАССЕТНЫЙ МК1', t:'rocket',   dmg:120, rng:295,rof:0.82,ec:36, p:500,  lv:13,sell:250, d:'Разделяющийся'},
+  {id:'r4',n:'НАПАЛМ МК1',    t:'rocket',   dmg:175, rng:310,rof:0.7, ec:48, p:1100, lv:19,sell:550, d:'Зажигательный'},
+  {id:'r5',n:'НАПАЛМ МК2',    t:'rocket',   dmg:250, rng:325,rof:0.6, ec:62, p:2200, lv:26,sell:1100,d:'Интенсивный'},
+  {id:'r6',n:'ВУЛКАН МРЛ',    t:'rocket',   dmg:350, rng:340,rof:0.52,ec:78, p:4200, lv:32,sell:2100,d:'Многозарядный'},
+  {id:'r7',n:'АРМАГЕДДОН МК1',t:'rocket',   dmg:490, rng:355,rof:0.44,ec:96, p:8000, lv:38,sell:4000,d:'Мощный'},
+  {id:'r8',n:'МИКРО-РАКЕТЫ',  t:'rocket',   dmg:280, rng:320,rof:1.5, ec:60, p:14000,lv:45,sell:7000,d:'Быстрая серия'},
+  {id:'r9',n:'НОВА-РАКЕТА',   t:'rocket',   dmg:700, rng:370,rof:0.36,ec:120,p:25000,lv:52,sell:12500,d:'Взрыв'},
+  {id:'r10',n:'САМОНАВОД.',   t:'rocket',   dmg:950, rng:390,rof:0.3, ec:148,p:42000,lv:59,sell:21000,d:'Самонаводящаяся'},
+  {id:'r11',n:'ТОРНАДО МРЛ',  t:'rocket',   dmg:1300,rng:410,rof:0.25,ec:180,p:72000,lv:67,sell:36000,d:'Смерч'},
+  {id:'r12',n:'МЕГАТОННАЯ',   t:'rocket',   dmg:1800,rng:430,rof:0.2, ec:218,p:120000,lv:75,sell:60000,d:'Мегаудар'},
+  {id:'r13',n:'ЗВЁЗДНЫЙ ВЗРЫВ',t:'rocket',  dmg:2500,rng:450,rof:0.16,ec:265,p:200000,lv:83,sell:100000,d:'Звёздный'},
+  {id:'r14',n:'ОМЕГА-РАКЕТА', t:'rocket',   dmg:3500,rng:475,rof:0.13,ec:320,p:340000,lv:92,sell:170000,d:'Финальное'},
+  // UNIQUE (boss drops)
+  {id:'godshot',n:'⭐ DIVINE SHOT', t:'ballistic',dmg:8000,rng:700,rof:0.4,ec:80, p:0,lv:1,sell:5000,d:'Дроп с босса',unique:true},
+  {id:'voidb',  n:'⭐ VOID BEAM',   t:'energy',   dmg:7000,rng:500,rof:0.8,ec:100,p:0,lv:1,sell:6000,d:'Дроп с босса',unique:true},
+  {id:'omegar', n:'⭐ OMEGA ROCKET',t:'rocket',   dmg:9000,rng:550,rof:0.25,ec:130,p:0,lv:1,sell:7000,d:'Дроп с босса',unique:true},
 ];
 
-// MODULES: energy (8) + armor/DR (8) + cargo (6) = 22 total
-// Armor modules now give DAMAGE REDUCTION (dr, 0..1) instead of HP
+// MODULES — batteries every 7-10 lvls, generators every 8-11, armor every 10-12, cargo every 11-13
+// Prices /10 for testing
 const MODULES=[
-  // ── ENERGY: batteries ──
-  {id:'bs',  n:'БАТАРЕЯ S',    sl:'en',ep:40,  eg:0,  dr:0,inv:0,p:150,   lv:1,  sell:75,   d:'+40 макс. EN'},
-  {id:'bm',  n:'БАТАРЕЯ M',    sl:'en',ep:90,  eg:0,  dr:0,inv:0,p:500,   lv:8,  sell:250,  d:'+90 макс. EN'},
-  {id:'bl',  n:'БАТАРЕЯ L',    sl:'en',ep:180, eg:0,  dr:0,inv:0,p:1800,  lv:18, sell:900,  d:'+180 макс. EN'},
-  {id:'bxl', n:'БАТАРЕЯ XL',   sl:'en',ep:350, eg:0,  dr:0,inv:0,p:6000,  lv:32, sell:3000, d:'+350 макс. EN'},
-  // ── ENERGY: generators ──
-  {id:'gs',  n:'ГЕНЕРАТОР S',  sl:'en',ep:0,   eg:8,  dr:0,inv:0,p:200,   lv:1,  sell:100,  d:'+8 EN/с'},
-  {id:'gm',  n:'ГЕНЕРАТОР M',  sl:'en',ep:0,   eg:20, dr:0,inv:0,p:800,   lv:12, sell:400,  d:'+20 EN/с'},
-  {id:'gl',  n:'ГЕНЕРАТОР L',  sl:'en',ep:0,   eg:40, dr:0,inv:0,p:3000,  lv:25, sell:1500, d:'+40 EN/с'},
-  {id:'gxl', n:'РЕАКТОР',      sl:'en',ep:0,   eg:80, dr:0,inv:0,p:12000, lv:45, sell:6000, d:'+80 EN/с'},
-  {id:'gxx', n:'ТЕРМОЯДЕРНЫЙ', sl:'en',ep:0,   eg:150,dr:0,inv:0,p:40000, lv:70, sell:20000,d:'+150 EN/с'},
-  // ── ARMOR: damage reduction ──
-  // dr = fraction of damage blocked (0.05 = 5%)
-  {id:'als', n:'ЗАЩИТА ЛЁГК.',  sl:'ar',ep:0,   eg:0,  dr:.05,inv:0,p:200,   lv:1,  sell:100,  d:'-5% получаемого урона'},
-  {id:'alm', n:'ЗАЩИТА СР.',    sl:'ar',ep:0,   eg:0,  dr:.10,inv:0,p:700,   lv:8,  sell:350,  d:'-10% урона'},
-  {id:'alh', n:'БРОНЯ ТЯЖЁЛ.',  sl:'ar',ep:0,   eg:0,  dr:.15,inv:0,p:2500,  lv:18, sell:1250, d:'-15% урона'},
-  {id:'ala', n:'НАНОБРОНЬ',     sl:'ar',ep:0,   eg:0,  dr:.22,inv:0,p:8000,  lv:32, sell:4000, d:'-22% урона'},
-  {id:'ald', n:'АДАМАНТИН',     sl:'ar',ep:0,   eg:0,  dr:.30,inv:0,p:25000, lv:50, sell:12500,d:'-30% урона'},
-  {id:'alg', n:'КВАНТОВЫЙ ЩИТ', sl:'ar',ep:0,   eg:0,  dr:.40,inv:0,p:80000, lv:75, sell:40000,d:'-40% урона'},
-  // ── CARGO ──
-  {id:'cs',  n:'ГРУЗ. ОТСЕК',   sl:'ar',ep:0,   eg:0,  dr:0,inv:5,  p:120,   lv:1,  sell:60,   d:'+5 ячеек инвентаря'},
-  {id:'cm',  n:'ГРУЗ. XL',      sl:'ar',ep:0,   eg:0,  dr:0,inv:12, p:450,   lv:10, sell:225,  d:'+12 ячеек'},
-  {id:'cl',  n:'ГРУЗ. XXL',     sl:'ar',ep:0,   eg:0,  dr:0,inv:25, p:1500,  lv:22, sell:750,  d:'+25 ячеек'},
-  {id:'cxl', n:'СКЛАД МЕГА',    sl:'ar',ep:0,   eg:0,  dr:0,inv:50, p:6000,  lv:40, sell:3000, d:'+50 ячеек'},
+  // BATTERIES (13 items, lv 1,8,16,24,32,40,48,57,66,75,84,93 ≈7-10 lvl step)
+  {id:'b1', n:'БАТАРЕЯ-1',    sl:'en',ep:40,  eg:0, dr:0,inv:0,p:25,    lv:1,  sell:12,  d:'+40 EN'},
+  {id:'b2', n:'БАТАРЕЯ-2',    sl:'en',ep:70,  eg:0, dr:0,inv:0,p:80,    lv:8,  sell:40,  d:'+70 EN'},
+  {id:'b3', n:'БАТАРЕЯ-3',    sl:'en',ep:110, eg:0, dr:0,inv:0,p:220,   lv:16, sell:110, d:'+110 EN'},
+  {id:'b4', n:'БАТАРЕЯ-4',    sl:'en',ep:165, eg:0, dr:0,inv:0,p:550,   lv:24, sell:275, d:'+165 EN'},
+  {id:'b5', n:'БАТАРЕЯ-5',    sl:'en',ep:240, eg:0, dr:0,inv:0,p:1300,  lv:32, sell:650, d:'+240 EN'},
+  {id:'b6', n:'БАТАРЕЯ-6',    sl:'en',ep:340, eg:0, dr:0,inv:0,p:3000,  lv:40, sell:1500,d:'+340 EN'},
+  {id:'b7', n:'КОНД.МАТ.-1',  sl:'en',ep:480, eg:0, dr:0,inv:0,p:7000,  lv:48, sell:3500,d:'+480 EN'},
+  {id:'b8', n:'КОНД.МАТ.-2',  sl:'en',ep:680, eg:0, dr:0,inv:0,p:16000, lv:57, sell:8000,d:'+680 EN'},
+  {id:'b9', n:'УЛЬТРА-КОНД.', sl:'en',ep:960, eg:0, dr:0,inv:0,p:36000, lv:66, sell:18000,d:'+960 EN'},
+  {id:'b10',n:'МЕГА-КОНД.',   sl:'en',ep:1350,eg:0, dr:0,inv:0,p:80000, lv:75, sell:40000,d:'+1350 EN'},
+  {id:'b11',n:'КВАНТ.НАКОП.', sl:'en',ep:1900,eg:0, dr:0,inv:0,p:170000,lv:84, sell:85000,d:'+1900 EN'},
+  {id:'b12',n:'АРК-НАКОП.',   sl:'en',ep:2700,eg:0, dr:0,inv:0,p:370000,lv:93, sell:185000,d:'+2700 EN'},
+  // GENERATORS (11 items, lv 1,9,18,27,36,46,56,67,78,89 ≈8-11 step)
+  {id:'g1', n:'ГЕНЕРАТОР-1',  sl:'en',ep:0,eg:8,   dr:0,inv:0,p:30,    lv:1,  sell:15,  d:'+8 EN/с'},
+  {id:'g2', n:'ГЕНЕРАТОР-2',  sl:'en',ep:0,eg:16,  dr:0,inv:0,p:100,   lv:9,  sell:50,  d:'+16 EN/с'},
+  {id:'g3', n:'ГЕНЕРАТОР-3',  sl:'en',ep:0,eg:28,  dr:0,inv:0,p:300,   lv:18, sell:150, d:'+28 EN/с'},
+  {id:'g4', n:'ГЕНЕРАТОР-4',  sl:'en',ep:0,eg:44,  dr:0,inv:0,p:800,   lv:27, sell:400, d:'+44 EN/с'},
+  {id:'g5', n:'РЕАКТОР-1',    sl:'en',ep:0,eg:65,  dr:0,inv:0,p:2000,  lv:36, sell:1000,d:'+65 EN/с'},
+  {id:'g6', n:'РЕАКТОР-2',    sl:'en',ep:0,eg:95,  dr:0,inv:0,p:5000,  lv:46, sell:2500,d:'+95 EN/с'},
+  {id:'g7', n:'РЕАКТОР-3',    sl:'en',ep:0,eg:140, dr:0,inv:0,p:13000, lv:56, sell:6500,d:'+140 EN/с'},
+  {id:'g8', n:'ТЕРМОЯД.-1',   sl:'en',ep:0,eg:200, dr:0,inv:0,p:32000, lv:67, sell:16000,d:'+200 EN/с'},
+  {id:'g9', n:'ТЕРМОЯД.-2',   sl:'en',ep:0,eg:290, dr:0,inv:0,p:75000, lv:78, sell:37500,d:'+290 EN/с'},
+  {id:'g10',n:'АНТ.МАТ.ГЕН.', sl:'en',ep:0,eg:420, dr:0,inv:0,p:180000,lv:89, sell:90000,d:'+420 EN/с'},
+  // ARMOR/DR (9 items, lv 1,11,22,33,44,55,66,77,88 ≈10-12 step)
+  {id:'a1', n:'БРОНЯ-1',      sl:'ar',ep:0,eg:0,dr:.04,inv:0,p:35,    lv:1,  sell:17,  d:'-4% урона'},
+  {id:'a2', n:'БРОНЯ-2',      sl:'ar',ep:0,eg:0,dr:.08,inv:0,p:120,   lv:11, sell:60,  d:'-8% урона'},
+  {id:'a3', n:'БРОНЯ-3',      sl:'ar',ep:0,eg:0,dr:.13,inv:0,p:350,   lv:22, sell:175, d:'-13% урона'},
+  {id:'a4', n:'НАНОБРОНЬ-1',  sl:'ar',ep:0,eg:0,dr:.18,inv:0,p:1000,  lv:33, sell:500, d:'-18% урона'},
+  {id:'a5', n:'НАНОБРОНЬ-2',  sl:'ar',ep:0,eg:0,dr:.24,inv:0,p:3000,  lv:44, sell:1500,d:'-24% урона'},
+  {id:'a6', n:'АДАМАНТИН-1',  sl:'ar',ep:0,eg:0,dr:.30,inv:0,p:8000,  lv:55, sell:4000,d:'-30% урона'},
+  {id:'a7', n:'АДАМАНТИН-2',  sl:'ar',ep:0,eg:0,dr:.37,inv:0,p:22000, lv:66, sell:11000,d:'-37% урона'},
+  {id:'a8', n:'КВАНТ.ЩИТ-1',  sl:'ar',ep:0,eg:0,dr:.44,inv:0,p:60000, lv:77, sell:30000,d:'-44% урона'},
+  {id:'a9', n:'КВАНТ.ЩИТ-2',  sl:'ar',ep:0,eg:0,dr:.52,inv:0,p:160000,lv:88, sell:80000,d:'-52% урона'},
+  // CARGO (8 items, lv 1,12,24,36,48,60,72,84 ≈11-12 step)
+  {id:'c1', n:'ТРЮМ-1',       sl:'ar',ep:0,eg:0,dr:0,inv:5,  p:20,    lv:1,  sell:10,  d:'+5 ячеек'},
+  {id:'c2', n:'ТРЮМ-2',       sl:'ar',ep:0,eg:0,dr:0,inv:10, p:70,    lv:12, sell:35,  d:'+10 ячеек'},
+  {id:'c3', n:'ТРЮМ-3',       sl:'ar',ep:0,eg:0,dr:0,inv:18, p:220,   lv:24, sell:110, d:'+18 ячеек'},
+  {id:'c4', n:'СКЛАД МЕГА',   sl:'ar',ep:0,eg:0,dr:0,inv:30, p:650,   lv:36, sell:325, d:'+30 ячеек'},
+  {id:'c5', n:'СКЛАД ГИГА',   sl:'ar',ep:0,eg:0,dr:0,inv:48, p:2000,  lv:48, sell:1000,d:'+48 ячеек'},
+  {id:'c6', n:'СКЛАД ТЕРА',   sl:'ar',ep:0,eg:0,dr:0,inv:75, p:6000,  lv:60, sell:3000,d:'+75 ячеек'},
+  {id:'c7', n:'СКЛАД ПЕТА',   sl:'ar',ep:0,eg:0,dr:0,inv:110,p:18000, lv:72, sell:9000,d:'+110 ячеек'},
+  {id:'c8', n:'БЕСК. ТРЮМ',   sl:'ar',ep:0,eg:0,dr:0,inv:160,p:55000, lv:84, sell:27500,d:'+160 ячеек'},
 ];
 
 const MECHS=[
-  {id:'scout',  n:'SCOUT-1',   bhp:150,  p:0,      lv:1,  sell:0,    d:'Лёгкий стартовый'},
-  {id:'viper',  n:'VIPER-2',   bhp:280,  p:2000,   lv:10, sell:1000, d:'Скоростной боец'},
-  {id:'assault',n:'ASSAULT-5', bhp:500,  p:8000,   lv:20, sell:4000, d:'Сбалансированный'},
-  {id:'titan',  n:'TITAN-9',   bhp:900,  p:25000,  lv:35, sell:12500,d:'Тяжёлая крепость'},
-  {id:'dreadnought',n:'DREAD-X',bhp:1600,p:80000,  lv:55, sell:40000,d:'Линкор'},
-  {id:'omegam', n:'OMEGA-X',   bhp:3000, p:250000, lv:80, sell:125000,d:'Легендарный'}
+  {id:'scout',      n:'SCOUT-1',    bhp:150,  p:0,     lv:1,  sell:0,    d:'Лёгкий стартовый'},
+  {id:'viper',      n:'VIPER-2',    bhp:270,  p:250,   lv:10, sell:125,  d:'Скоростной'},
+  {id:'assault',    n:'ASSAULT-5',  bhp:450,  p:900,   lv:20, sell:450,  d:'Сбалансированный'},
+  {id:'titan',      n:'TITAN-9',    bhp:800,  p:2800,  lv:32, sell:1400, d:'Тяжёлая крепость'},
+  {id:'dread',      n:'DREAD-X',    bhp:1400, p:9000,  lv:45, sell:4500, d:'Линкор'},
+  {id:'colossus',   n:'COLOSSUS',   bhp:2400, p:28000, lv:58, sell:14000,d:'Великан'},
+  {id:'omega_m',    n:'OMEGA-X',    bhp:4200, p:85000, lv:72, sell:42500,d:'Легендарный'},
+  {id:'godmech',    n:'GOD-UNIT',   bhp:7500, p:250000,lv:88, sell:125000,d:'Воплощение мощи'},
+];
+
+// QUEST definitions per zone (repeatable infinitely)
+const QUESTS=[
+  // Zone 0 — City (lv 1-30)
+  {id:'q0_10', zone:0, name:'Чистильщик',   goal:'kill', cnt:10,  reward:{cr:300,  xp:800},   desc:'Убить 10 монстров'},
+  {id:'q0_30', zone:0, name:'Охотник',      goal:'kill', cnt:30,  reward:{cr:900,  xp:2500},  desc:'Убить 30 монстров'},
+  {id:'q0_50', zone:0, name:'Истребитель',  goal:'kill', cnt:50,  reward:{cr:1800, xp:5000},  desc:'Убить 50 монстров'},
+  {id:'q0_b',  zone:0, name:'Охота на Босса',goal:'boss',cnt:1,   reward:{cr:5000, xp:15000}, desc:'Убить Стража Города'},
+  // Zone 1 — Wastes (lv 30-70)
+  {id:'q1_10', zone:1, name:'Санитар',      goal:'kill', cnt:10,  reward:{cr:800,  xp:2000},  desc:'Убить 10 монстров'},
+  {id:'q1_30', zone:1, name:'Мясник',       goal:'kill', cnt:30,  reward:{cr:2500, xp:6500},  desc:'Убить 30 монстров'},
+  {id:'q1_50', zone:1, name:'Герой',        goal:'kill', cnt:50,  reward:{cr:5000, xp:13000}, desc:'Убить 50 монстров'},
+  {id:'q1_b',  zone:1, name:'Убить Титана', goal:'boss', cnt:1,   reward:{cr:15000,xp:45000}, desc:'Убить Пустынного Титана'},
+  // Zone 2 — Ruins (lv 70-110)
+  {id:'q2_10', zone:2, name:'Исследователь',goal:'kill', cnt:10,  reward:{cr:2500, xp:6000},  desc:'Убить 10 монстров'},
+  {id:'q2_30', zone:2, name:'Разрушитель',  goal:'kill', cnt:30,  reward:{cr:8000, xp:20000}, desc:'Убить 30 монстров'},
+  {id:'q2_50', zone:2, name:'Легенда',      goal:'kill', cnt:50,  reward:{cr:15000,xp:40000}, desc:'Убить 50 монстров'},
+  {id:'q2_b',  zone:2, name:'Конец Пустоты',goal:'boss', cnt:1,   reward:{cr:50000,xp:150000},desc:'Убить Пустотного Колосса'},
 ];
 
 // ═══════════════════════════════════
@@ -1315,7 +1400,7 @@ function updHUD(){
 function startGame(){
   const sv=loadGame();
   if(sv&&sv.p){Object.assign(G.p,sv.p);G.p.enSl=G.p.enSl||[null,null,null,null];G.p.arSl=G.p.arSl||[null,null];G.p.inv=G.p.inv||[];G.p.sk=G.p.sk||{bal:0,enw:0,rkt:0,arm:0,crg:0,ens:0};G.zone=sv.zone||0;}
-  G.p.w[0]=G.p.w[0]||'pistol';G.started=true;G.saveTimer=30;
+  G.p.w[0]=G.p.w[0]||'p1';G.started=true;G.saveTimer=30;
   document.getElementById('overlay-start').style.display='none';
   CHUNKS.clear();genWorld();calcStats();requestAnimationFrame(loop);
 }
@@ -1339,6 +1424,7 @@ function loop(ts){
 // PANELS
 // ═══════════════════════════════════
 let curTab='inv';
+let shopCat='ballistic';
 function op(tab){document.getElementById('panel').style.display='flex';sw(tab||curTab);}
 function sw(tab){curTab=tab;['inv','mech','shop'].forEach(t=>document.getElementById('t-'+t).classList.toggle('on',t===tab));if(tab==='inv')rInv();else if(tab==='mech')rMech();else rShop();}
 function cp(){document.getElementById('panel').style.display='none';}
@@ -1411,31 +1497,25 @@ function rShop(){
   if(!nearTrader){b.innerHTML=h;return;}
   h+=`<div style="background:linear-gradient(135deg,#fff8e0,#f4e8a0);border:1px solid #c8a830;border-radius:12px;padding:10px 14px;margin-bottom:10px;box-shadow:0 2px 8px #c8a83033"><div style="font-size:12px;color:#604010;font-weight:bold">💰 Кредиты: ${p.cr} CR</div><div style="font-size:9px;color:#8a7040">LVL ${p.lvl} · Нажми чтобы купить</div></div>`;
   const mkC=(item,type,can,own,lk,buyFn)=>{return`<div class="icard ${own?'owned':''} ${lk?'locked':''}" onclick="${can?buyFn:'void 0'}"><span class="ilvl ${lk?'no':'ok'}">LV${item.lv}</span><div class="iname">${item.n||item.name}${own?' ✓':''}</div><div class="istat">${type==='w'?item.t.toUpperCase()+' ·D:'+item.dmg+' ·R:'+item.rng+' ·ROF:'+item.rof+' ·EN:'+item.ec+' — '+item.d:item.d}</div><div class="iprice">${item.p===0?'<span style="color:#40a020">БЕСПЛАТНО</span>':item.p+' CR'} ${lk?`<span style="color:#c03020">🔒 LV${item.lv}</span>`:can?`<span style="color:#408020">→ КУПИТЬ</span>`:own?`<span style="color:#808040">✓ Есть</span>`:`<span style="color:#907030">Мало CR</span>`}</div></div>`;};
-  h+=`<div class="psec">🔫 Оружие</div>`;
-  for(const w of WEAPONS.filter(x=>!x.unique)){
-  const own=false;
-  const lk=p.lvl<w.lv;
-  const can=!lk&&p.cr>=w.p;
-  h+=mkC(w,'w',can,own,lk,`sW('${w.id}')`);
+  // category tabs
+  const cats=[['ballistic','🔫','Баллистика'],['energy','⚡','Энергия'],['rocket','🚀','Ракеты'],['modules','🛠','Модули'],['mechs','🤖','Мехи']];
+  h+=`<div class="scatbar">`+cats.map(c=>`<button class="scat ${shopCat===c[0]?'on':''}" onclick="setShopCat('${c[0]}')">${c[1]} ${c[2]}</button>`).join('')+`</div>`;
+  if(shopCat==='ballistic'||shopCat==='energy'||shopCat==='rocket'){
+    const wl=WEAPONS.filter(x=>!x.unique&&x.t===shopCat);
+    h+=`<div class="psec">${cats.find(c=>c[0]===shopCat)[1]} ${cats.find(c=>c[0]===shopCat)[2]}</div>`;
+    for(const w of wl){const lk=p.lvl<w.lv;const can=!lk&&p.cr>=w.p;h+=mkC(w,'w',can,false,lk,`sW('${w.id}')`);}
+  }else if(shopCat==='modules'){
+    h+=`<div class="psec">⚡ Энергомодули</div>`;
+    for(const m of MODULES.filter(x=>x.sl==='en')){const lk=p.lvl<m.lv;const can=!lk&&p.cr>=m.p;h+=mkC(m,'m',can,false,lk,`sM('${m.id}')`);}
+    h+=`<div class="psec">🛡 Броня / Трюм</div>`;
+    for(const m of MODULES.filter(x=>x.sl==='ar')){const lk=p.lvl<m.lv;const can=!lk&&p.cr>=m.p;h+=mkC(m,'m',can,false,lk,`sM('${m.id}')`);}
+  }else if(shopCat==='mechs'){
+    h+=`<div class="psec">🤖 Мехи</div>`;
+    for(const mc of MECHS){const own=p.mech===mc.id||p.inv.some(x=>x.type==='mech'&&x.id===mc.id);const lk=p.lvl<mc.lv;const can=!own&&!lk&&(mc.p===0||p.cr>=mc.p);h+=`<div class="icard ${own?'owned':''} ${lk?'locked':''}" onclick="${can?`sMc('${mc.id}')`:'void 0'}"><span class="ilvl ${lk?'no':'ok'}">LV${mc.lv}</span><div class="iname">${mc.n}${own?' ✓':''}</div><div class="istat">${mc.d} · Базовый HP: ${mc.bhp}</div><div class="iprice">${mc.p===0?'<span style="color:#40a020">БЕСПЛАТНО</span>':mc.p+' CR'} ${lk?`<span style="color:#c03020">🔒 LV${mc.lv}</span>`:can?`<span style="color:#408020">→ КУПИТЬ</span>`:own?`<span style="color:#808040">✓ Активен</span>`:`<span style="color:#907030">Мало CR</span>`}</div></div>`;}
   }
-  h+=`<div class="psec">⚡ Энергомодули</div>`;
-  for(const m of MODULES.filter(x=>x.sl==='en')){
-  const ins=false;
-  const lk=p.lvl<m.lv;
-  const can=!lk&&p.cr>=m.p;
-  h+=mkC(m,'m',can,ins,lk,`sM('${m.id}')`);
-  }
-  h+=`<div class="psec">🛡 Броня / Трюм</div>`;
-  for(const m of MODULES.filter(x=>x.sl==='ar')){
-  const ins=false;
-  const lk=p.lvl<m.lv;
-  const can=!lk&&p.cr>=m.p;
-  h+=mkC(m,'m',can,ins,lk,`sM('${m.id}')`);
-  }
-  h+=`<div class="psec">🤖 Мехи</div>`;
-  for(const mc of MECHS){const own=p.mech===mc.id||p.inv.some(x=>x.type==='mech'&&x.id===mc.id);const lk=p.lvl<mc.lv;const can=!own&&!lk&&(mc.p===0||p.cr>=mc.p);h+=`<div class="icard ${own?'owned':''} ${lk?'locked':''}" onclick="${can?`sMc('${mc.id}')`:'void 0'}"><span class="ilvl ${lk?'no':'ok'}">LV${mc.lv}</span><div class="iname">${mc.n}${own?' ✓':''}</div><div class="istat">${mc.d} · Базовый HP: ${mc.bhp}</div><div class="iprice">${mc.p===0?'<span style="color:#40a020">БЕСПЛАТНО</span>':mc.p+' CR'} ${lk?`<span style="color:#c03020">🔒 LV${mc.lv}</span>`:can?`<span style="color:#408020">→ КУПИТЬ</span>`:own?`<span style="color:#808040">✓ Активен</span>`:`<span style="color:#907030">Мало CR</span>`}</div></div>`;}
   b.innerHTML=h;
 }
+function setShopCat(c){shopCat=c;rShop();}
 function sW(id){const p=G.p,w=WEAPONS.find(x=>x.id===id);if(p.cr<w.p)return notify('Мало CR!');p.cr-=w.p;const sl=p.w.indexOf(null);if(sl!==-1){p.w[sl]=id;calcStats();notify('✓ '+w.n);}else if(p.inv.length<p.invMax){p.inv.push({type:'weapon',id,name:w.n});notify('→ инвентарь: '+w.n);}else{p.cr+=w.p;return notify('Нет места!');}updHUD();rShop();}
 function sM(id){const p=G.p,m=MODULES.find(x=>x.id===id);if(p.cr<m.p)return notify('Мало CR!');p.cr-=m.p;const arr=m.sl==='en'?p.enSl:p.arSl;const sl=arr.indexOf(null);if(sl!==-1){arr[sl]=id;calcStats();notify('✓ '+m.n);}else if(p.inv.length<p.invMax){p.inv.push({type:'module',id,name:m.n});notify('→ инвентарь: '+m.n);}else{p.cr+=m.p;return notify('Нет места!');}updHUD();rShop();}
 function sMc(id){const p=G.p,mc=MECHS.find(x=>x.id===id);if(p.cr<mc.p)return notify('Мало CR!');p.cr-=mc.p;p.mech=id;calcStats();notify('✓ '+mc.n);updHUD();rShop();}
