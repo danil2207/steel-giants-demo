@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="ru">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>IRON WASTES 3D</title>
+<title>IRON WASTES</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{width:100%;height:100%;overflow:hidden;background:#1a1a0e;touch-action:none}
@@ -23,9 +24,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#1a1a0e;touch-action
 .bhp{height:100%;background:linear-gradient(90deg,#205810,#40b020,#60e030);border-radius:4px;transition:width .12s}
 .ben{height:100%;background:linear-gradient(90deg,#102858,#2060b0,#40a0e0);border-radius:4px;transition:width .12s}
  
-/* ── 3D CANVAS WRAPPER ── */
+/* ── CANVAS AREA ── */
 #cw{flex:1;position:relative;overflow:hidden}
-#gc_container{display:block;width:100%;height:100%}
+#gc{display:block;width:100%;height:100%}
  
 /* ── BOSS BAR ── */
 #bbar{position:absolute;bottom:0;left:0;right:0;height:30px;
@@ -50,11 +51,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#1a1a0e;touch-action
   background:linear-gradient(0deg,rgba(10,12,4,.92) 0%,rgba(18,20,8,.7) 100%);
   border-top:1px solid rgba(90,96,32,.4);flex-shrink:0;position:relative;height:130px}
  
-/* WEAPON SLOTS */
+/* LEFT: two weapon slot squares */
 #wslots{display:flex;flex-direction:column;gap:6px;justify-content:flex-end;padding-bottom:4px}
 .wslot-btn{width:58px;height:58px;border-radius:14px;cursor:pointer;border:none;
   -webkit-appearance:none;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;position:relative;transition:transform .08s,box-shadow .08s;overflow:hidden}
+  justify-content:center;position:relative;transition:transform .08s,box-shadow .08s;
+  overflow:hidden}
 .wslot-btn.ws1{background:linear-gradient(145deg,#5a2808,#2a1004);
   box-shadow:0 4px 14px #c0401077,0 2px 0 #401008,inset 0 1px 0 #ffffff44,0 0 0 2px #c04010}
 .wslot-btn.ws2{background:linear-gradient(145deg,#083060,#041830);
@@ -66,65 +68,95 @@ html,body{width:100%;height:100%;overflow:hidden;background:#1a1a0e;touch-action
 .ws-icon{font-size:22px;line-height:1}
 .ws-name{font-size:6px;color:#ffffffcc;font-family:'Courier New',monospace;letter-spacing:.3px;
   max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px}
-.ws-badge{position:absolute;top:3px;right:3px;font-size:6px;background:#000000aa;color:#ffffff;padding:1px 3px;border-radius:4px;font-family:'Courier New',monospace}
+.ws-badge{position:absolute;top:3px;right:3px;font-size:6px;background:#000000aa;
+  color:#ffffff;padding:1px 3px;border-radius:4px;font-family:'Courier New',monospace}
  
-/* JOYSTICK */
-#jpad{width:120px;height:120px;position:absolute;left:50%;transform:translateX(-50%);bottom:8px;touch-action:none;z-index:5}
+/* CENTER: transparent joystick */
+#jpad{width:120px;height:120px;position:absolute;left:50%;transform:translateX(-50%);
+  bottom:8px;touch-action:none;z-index:5}
 #jbase{width:110px;height:110px;border-radius:50%;
   background:radial-gradient(circle,rgba(255,255,255,.06) 0%,rgba(255,255,255,.02) 60%,transparent 100%);
-  border:2px solid rgba(255,255,255,.18);position:absolute;top:5px;left:5px;box-shadow:inset 0 2px 12px rgba(0,0,0,.3)}
+  border:2px solid rgba(255,255,255,.18);position:absolute;top:5px;left:5px;
+  box-shadow:inset 0 2px 12px rgba(0,0,0,.3)}
 #jknob{width:44px;height:44px;border-radius:50%;
   background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.35),rgba(255,255,255,.12));
-  border:2px solid rgba(255,255,255,.5);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  border:2px solid rgba(255,255,255,.5);position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
   box-shadow:0 2px 12px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.1)}
  
-/* AUTOBATTLE */
+/* RIGHT: autobattle toggle */
 #rightcol{display:flex;flex-direction:column;gap:6px;justify-content:flex-end;padding-bottom:4px;align-items:center}
 #auto-btn{width:58px;height:58px;border-radius:14px;border:none;cursor:pointer;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
   -webkit-appearance:none;transition:transform .1s,box-shadow .1s;font-family:'Courier New',monospace}
-#auto-btn.off{background:linear-gradient(145deg,#2a2c18,#14160a);box-shadow:0 3px 10px #00000055,0 0 0 2px #4a5018;color:#6a7030}
+#auto-btn.off{background:linear-gradient(145deg,#2a2c18,#14160a);
+  box-shadow:0 3px 10px #00000055,0 0 0 2px #4a5018;color:#6a7030}
 #auto-btn.on{background:linear-gradient(145deg,#206040,#0c3020);
   box-shadow:0 4px 14px #20a06077,0 2px 0 #0c3020,0 0 0 2px #30c060,0 0 16px #30c06055;color:#60f080}
 .auto-icon{font-size:22px;line-height:1}
 .auto-label{font-size:7px;letter-spacing:.5px;font-weight:bold}
-
-/* HUD OVERLAYS */
+/* HUD top-right buttons */
 #hud-btns{display:flex;gap:5px;margin-left:auto}
 .hud-btn{padding:4px 9px;border:none;border-radius:8px;font-size:9px;cursor:pointer;
   font-family:'Courier New',monospace;font-weight:bold;-webkit-appearance:none;transition:transform .08s}
 .hud-btn:active{transform:scale(.93)}
 .hb-s{color:#fff;background:linear-gradient(135deg,#408020,#205010);box-shadow:0 2px 6px #40802044}
 .hb-m{color:#fff;background:linear-gradient(135deg,#906010,#503010);box-shadow:0 2px 6px #90601044}
-
-#bigmap{position:absolute;inset:0;background:rgba(0,0,0,.88);z-index:90;display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+/* Big map overlay */
+#bigmap{position:absolute;inset:0;background:rgba(0,0,0,.88);z-index:90;display:none;
+  flex-direction:column;align-items:center;justify-content:center;gap:8px}
 #bigmap-canvas{border-radius:8px;border:2px solid #5a6020;box-shadow:0 0 30px #00000088}
 .bm-close{padding:8px 24px;border:none;background:linear-gradient(135deg,#a07010,#604010);color:#fff;
   font-family:'Courier New',monospace;font-size:11px;border-radius:8px;cursor:pointer;letter-spacing:1px}
  
-#overlay-start{position:absolute;inset:0;background:radial-gradient(ellipse at center,#1a200a 0%,#080a04 100%);
+/* ── START OVERLAY ── */
+#overlay-start{position:absolute;inset:0;
+  background:radial-gradient(ellipse at center,#1a200a 0%,#080a04 100%);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:100}
-.ov-t{font-size:28px;color:#d4c040;letter-spacing:6px;text-shadow:0 0 40px #d4c04099,0 2px 0 #60500a;font-family:'Courier New',monospace}
+.ov-t{font-size:28px;color:#d4c040;letter-spacing:6px;
+  text-shadow:0 0 40px #d4c04099,0 2px 0 #60500a;font-family:'Courier New',monospace}
 .ov-s{font-size:9px;color:#8a9040;letter-spacing:3px;font-family:'Courier New',monospace}
-.ov-btn{padding:14px 36px;border:none;color:#fff;font-weight:bold;background:linear-gradient(135deg,#a07010,#604010);
-  font-family:'Courier New',monospace;font-size:13px;letter-spacing:2px;cursor:pointer;border-radius:12px;
+.ov-btn{padding:14px 36px;border:none;color:#fff;font-weight:bold;
+  background:linear-gradient(135deg,#a07010,#604010);
+  font-family:'Courier New',monospace;font-size:13px;letter-spacing:2px;
+  cursor:pointer;border-radius:12px;
   box-shadow:0 6px 24px #a0701066,0 2px 0 #402008,inset 0 1px 0 #ffffff44}
  
-#overlay-lvl{position:absolute;inset:0;background:#000000ee;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:120;padding:16px}
-.sk-btn{width:220px;padding:12px 16px;border:none;background:linear-gradient(135deg,#2a2c18,#1a1c0c);
-  color:#e0d090;font-family:'Courier New',monospace;font-size:10px;border-radius:10px;cursor:pointer;text-align:left;box-shadow:0 4px 12px #00000066,0 1px 0 #ffffff1a,inset 0 1px 0 #ffffff18}
+/* ── LEVEL UP ── */
+#overlay-lvl{position:absolute;inset:0;background:#000000ee;
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:120;padding:16px}
+.sk-btn{width:220px;padding:12px 16px;border:none;
+  background:linear-gradient(135deg,#2a2c18,#1a1c0c);
+  color:#e0d090;font-family:'Courier New',monospace;font-size:10px;border-radius:10px;
+  cursor:pointer;text-align:left;
+  box-shadow:0 4px 12px #00000066,0 1px 0 #ffffff1a,inset 0 1px 0 #ffffff18}
 .sk-btn:active{transform:scale(.97)}
  
-#panel{position:absolute;inset:0;background:linear-gradient(180deg,#f4f0e0 0%,#e8e4d0 100%);display:none;flex-direction:column;z-index:80}
-#ptabs{display:flex;background:linear-gradient(180deg,#ffffff,#e8e4d0);border-bottom:2px solid #c8b870;flex-shrink:0;box-shadow:0 2px 8px #00000022}
-.ptab{flex:1;padding:12px 4px;font-size:10px;font-family:'Courier New',monospace;color:#8a7840;background:transparent;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer;letter-spacing:.5px;font-weight:bold}
+/* ── PANEL (inventory/mech/shop) ── */
+#panel{position:absolute;inset:0;
+  background:linear-gradient(180deg,#f4f0e0 0%,#e8e4d0 100%);
+  display:none;flex-direction:column;z-index:80}
+#ptabs{display:flex;background:linear-gradient(180deg,#ffffff,#e8e4d0);
+  border-bottom:2px solid #c8b870;flex-shrink:0;
+  box-shadow:0 2px 8px #00000022}
+.ptab{flex:1;padding:12px 4px;font-size:10px;font-family:'Courier New',monospace;
+  color:#8a7840;background:transparent;border:none;
+  border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer;letter-spacing:.5px;font-weight:bold}
 .ptab.on{color:#604010;border-bottom-color:#a07010;background:linear-gradient(180deg,#fff8e0,transparent)}
-.pcx{color:#c04010;font-size:16px;cursor:pointer;padding:8px 14px;flex-shrink:0;background:none;border:none;font-weight:bold}
+.pcx{color:#c04010;font-size:16px;cursor:pointer;padding:8px 14px;
+  flex-shrink:0;background:none;border:none;font-weight:bold}
 #pbody{flex:1;overflow-y:auto;padding:10px 12px;-webkit-overflow-scrolling:touch;background:transparent}
-.psec{font-size:9px;color:#604010;letter-spacing:2px;margin:10px 0 6px;text-transform:uppercase;font-weight:bold;font-family:'Courier New',monospace;border-bottom:2px solid #c8b870;padding-bottom:4px}
+.psec{font-size:9px;color:#604010;letter-spacing:2px;margin:10px 0 6px;
+  text-transform:uppercase;font-weight:bold;font-family:'Courier New',monospace;
+  border-bottom:2px solid #c8b870;padding-bottom:4px}
  
-.icard{background:linear-gradient(135deg,#ffffff,#f4f0e0);border:1px solid #d4c890;border-radius:12px;padding:10px 12px;margin-bottom:8px;position:relative;cursor:pointer;box-shadow:0 4px 12px #00000018,0 1px 0 #ffffff99,inset 0 1px 0 #ffffffcc;transition:transform .1s,box-shadow .1s}
-.icard:active{transform:scale(.97)}
+/* ITEM CARD — 3D card look */
+.icard{background:linear-gradient(135deg,#ffffff,#f4f0e0);
+  border:1px solid #d4c890;border-radius:12px;padding:10px 12px;margin-bottom:8px;
+  position:relative;cursor:pointer;
+  box-shadow:0 4px 12px #00000018,0 1px 0 #ffffff99,inset 0 1px 0 #ffffffcc;
+  transition:transform .1s,box-shadow .1s}
+.icard:active{transform:scale(.97);box-shadow:0 1px 4px #00000022}
 .icard.owned{border-color:#80a040;background:linear-gradient(135deg,#f0f8e0,#e8f0d0)}
 .icard.locked{opacity:.45;cursor:default}
 .iname{font-size:11px;color:#302010;font-weight:bold}
@@ -134,1270 +166,1786 @@ html,body{width:100%;height:100%;overflow:hidden;background:#1a1a0e;touch-action
 .ok{background:linear-gradient(135deg,#e0f0c0,#c8e0a0);color:#406020;border:1px solid #80b040}
 .no{background:linear-gradient(135deg,#f0d0c0,#e0b0a0);color:#803020;border:1px solid #c06040}
  
-.invrow{background:linear-gradient(135deg,#ffffff,#f4f0e0);border:1px solid #d4c890;border-radius:10px;padding:8px 12px;margin-bottom:5px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 6px #00000012,inset 0 1px 0 #ffffffcc}
+/* INV ROW */
+.invrow{background:linear-gradient(135deg,#ffffff,#f4f0e0);border:1px solid #d4c890;
+  border-radius:10px;padding:8px 12px;margin-bottom:5px;display:flex;align-items:center;gap:8px;
+  box-shadow:0 2px 6px #00000012,inset 0 1px 0 #ffffffcc}
 .irvname{flex:1;font-size:10px;color:#302010;font-weight:bold}
 .irvstat{font-size:8px;color:#6a5830}
 .irvbtn{font-size:8px;padding:5px 10px;border:none;border-radius:6px;cursor:pointer;margin-left:4px;font-weight:bold;font-family:'Courier New',monospace}
 .ebtn{color:#fff;background:linear-gradient(135deg,#508030,#306010);box-shadow:0 2px 4px #50803044}
 .sbtn{color:#fff;background:linear-gradient(135deg,#908030,#604010);box-shadow:0 2px 4px #90803044}
  
-.mslot{width:76px;height:66px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:8px;text-align:center;padding:4px;font-family:'Courier New',monospace;transition:transform .1s;box-shadow:0 4px 12px #00000022,inset 0 1px 0 #ffffff44}
+/* MECH SLOTS */
+.mslot{width:76px;height:66px;border-radius:12px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:8px;text-align:center;padding:4px;font-family:'Courier New',monospace;
+  transition:transform .1s;box-shadow:0 4px 12px #00000022,inset 0 1px 0 #ffffff44}
 .mslot:active{transform:scale(.95)}
 .sw{background:linear-gradient(135deg,#fff0e0,#f0d0b0);border:2px solid #c06020;color:#803010}
 .se{background:linear-gradient(135deg,#e0f0ff,#c0d8f0);border:2px solid #2060a0;color:#103060}
 .sa{background:linear-gradient(135deg,#f8f0d0,#e8d8a0);border:2px solid #906020;color:#604010}
 </style>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 <body>
 <div id="root">
-  <div id="hud">
-    <div class="hs"><span class="hl">LVL</span><span class="hv" id="h-lvl">1</span></div>
-    <div style="flex:1;display:flex;flex-direction:column;gap:3px;margin:0 6px">
-      <div class="brow"><span class="blab">HP</span><div class="bwrap"><div class="bhp" id="bhp"></div></div><span style="font-size:8px;color:#60d030;min-width:42px;text-align:right;font-family:'Courier New',monospace" id="h-hp">100/100</span></div>
-      <div class="brow"><span class="blab">EN</span><div class="bwrap"><div class="ben" id="ben"></div></div><span style="font-size:8px;color:#40a0e0;min-width:42px;text-align:right;font-family:'Courier New',monospace" id="h-en">60/60</span></div>
-    </div>
-    <div class="hs"><span class="hl">XP</span><span class="hv" id="h-xp">0</span></div>
-    <div class="hs"><span class="hl">CR</span><span class="hv" id="h-cr">500</span></div>
-    <div id="hud-btns">
-      <button class="hud-btn hb-s" onclick="op('shop')">🏪</button>
-      <button class="hud-btn hb-m" onclick="op('mech')">⚙</button>
-      <button class="hud-btn hb-m" onclick="op('inv')" style="background:linear-gradient(135deg,#304888,#182040);box-shadow:0 2px 6px #30488844">📦</button>
-    </div>
+<!-- HUD -->
+<div id="hud">
+  <div class="hs"><span class="hl">LVL</span><span class="hv" id="h-lvl">1</span></div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:3px;margin:0 6px">
+    <div class="brow"><span class="blab">HP</span><div class="bwrap"><div class="bhp" id="bhp"></div></div><span style="font-size:8px;color:#60d030;min-width:42px;text-align:right;font-family:'Courier New',monospace" id="h-hp">100/100</span></div>
+    <div class="brow"><span class="blab">EN</span><div class="bwrap"><div class="ben" id="ben"></div></div><span style="font-size:8px;color:#40a0e0;min-width:42px;text-align:right;font-family:'Courier New',monospace" id="h-en">60/60</span></div>
   </div>
- 
-  <div id="cw">
-    <div id="gc_container"></div>
-    <div id="notif"></div>
-    <div id="quest-hud" style="display:none;position:absolute;top:92px;right:6px;background:linear-gradient(135deg,#1a1800ee,#2a2400ee);border:1px solid #d4a030;border-radius:10px;padding:7px 10px;min-width:160px;font-family:'Courier New',monospace;z-index:15;box-shadow:0 3px 12px #00000066">
-      <div style="font-size:8px;color:#d4a030;letter-spacing:1px;margin-bottom:3px">📋 ЗАДАНИЕ</div>
-      <div id="qhud-name" style="font-size:9px;color:#fff;font-weight:bold;margin-bottom:2px"></div>
-      <div id="qhud-prog" style="font-size:8px;color:#a0a060"></div>
-      <div id="qhud-bar-wrap" style="width:100%;height:6px;background:#333;border-radius:3px;margin-top:4px;overflow:hidden">
-        <div id="qhud-bar" style="height:100%;background:linear-gradient(90deg,#d4a030,#f0c040);border-radius:3px;transition:width .3s;width:0%"></div>
-      </div>
-    </div>
-    <div id="bbar"><span class="bbn" id="bbn">BOSS</span><div class="bbw"><div class="bbf" id="bbf"></div></div><span style="font-size:9px;color:#ff5050;font-family:'Courier New',monospace" id="bht">???</span></div>
-
-    <div id="bigmap">
-      <canvas id="bigmap-canvas"></canvas>
-      <button class="bm-close" onclick="closeBigmap()">✕ ЗАКРЫТЬ</button>
-    </div>
- 
-    <div id="overlay-start">
-      <div class="ov-t">⚙ IRON WASTES 3D ⚙</div>
-      <div class="ov-s">MEX WARS // THREE.JS GRAPHICS ENGINE</div>
-      <div style="font-size:9px;color:#506020;margin:2px 0">Полный 3D Мир · Турели · Квесты · Сохранение</div>
-      <button class="ov-btn" onclick="startGame()">[ ЗАПУСТИТЬ МЕХ ]</button>
-      <div id="save-info" style="font-size:9px;color:#8a9040;margin-top:4px;font-family:'Courier New',monospace"></div>
-    </div>
- 
-    <div id="overlay-lvl">
-      <div style="font-size:16px;color:#d4c040;letter-spacing:2px;font-family:'Courier New',monospace;text-shadow:0 0 20px #d4c04088">▲ LEVEL UP!</div>
-      <div id="skc" style="display:flex;flex-direction:column;gap:5px;margin-top:10px"></div>
-    </div>
- 
-    <div id="panel">
-      <div id="ptabs">
-        <button class="ptab on" id="t-inv" onclick="sw('inv')">📦 ИНВЕНТ.</button>
-        <button class="ptab" id="t-mech" onclick="sw('mech')">⚙ МЕХ</button>
-        <button class="ptab" id="t-shop" onclick="sw('shop')">🏪 МАГАЗИН</button>
-        <button class="ptab" id="t-quest" onclick="sw('quest')">📋 ЗАДАНИЯ</button>
-        <button class="pcx" onclick="cp()">✕</button>
-      </div>
-      <div id="pbody"></div>
-    </div>
-  </div>
- 
-  <div id="ctrl">
-    <div id="wslots">
-      <button class="wslot-btn ws1 wempty" id="wb1" ontouchstart="ft(0,event)" onclick="ft(0,null)">
-        <span class="ws-icon" id="wi1">⚫</span>
-        <span class="ws-name" id="wn1">ПУСТО</span>
-      </button>
-      <button class="wslot-btn ws2 wempty" id="wb2" ontouchstart="ft(1,event)" onclick="ft(1,null)">
-        <span class="ws-icon" id="wi2">⚫</span>
-        <span class="ws-name" id="wn2">ПУСТО</span>
-      </button>
-    </div>
-    <div id="jpad"><div id="jbase"><div id="jknob"></div></div></div>
-    <div id="rightcol">
-      <button id="auto-btn" class="off" onclick="toggleAuto()">
-        <span class="auto-icon">🤖</span>
-        <span class="auto-label" id="auto-lbl">АВТО</span>
-      </button>
-    </div>
+  <div class="hs"><span class="hl">XP</span><span class="hv" id="h-xp">0</span></div>
+  <div class="hs"><span class="hl">CR</span><span class="hv" id="h-cr">500</span></div>
+  <div id="hud-btns">
+    <button class="hud-btn hb-s" onclick="op('shop')">🏪</button>
+    <button class="hud-btn hb-m" onclick="op('mech')">⚙</button>
+    <button class="hud-btn hb-m" onclick="op('inv')" style="background:linear-gradient(135deg,#304888,#182040);box-shadow:0 2px 6px #30488844">📦</button>
   </div>
 </div>
-
+ 
+<!-- CANVAS -->
+<div id="cw">
+  <canvas id="gc" onclick="handleCanvasClick(event)"></canvas>
+  <div id="notif"></div>
+  <div id="quest-hud" style="display:none;position:absolute;top:92px;right:6px;
+    background:linear-gradient(135deg,#1a1800ee,#2a2400ee);
+    border:1px solid #d4a030;border-radius:10px;padding:7px 10px;min-width:160px;
+    font-family:'Courier New',monospace;z-index:15;
+    box-shadow:0 3px 12px #00000066">
+    <div style="font-size:8px;color:#d4a030;letter-spacing:1px;margin-bottom:3px">📋 ЗАДАНИЕ</div>
+    <div id="qhud-name" style="font-size:9px;color:#fff;font-weight:bold;margin-bottom:2px"></div>
+    <div id="qhud-prog" style="font-size:8px;color:#a0a060"></div>
+    <div id="qhud-bar-wrap" style="width:100%;height:6px;background:#333;border-radius:3px;margin-top:4px;overflow:hidden">
+      <div id="qhud-bar" style="height:100%;background:linear-gradient(90deg,#d4a030,#f0c040);border-radius:3px;transition:width .3s;width:0%"></div>
+    </div>
+  </div>
+  <div id="bbar"><span class="bbn" id="bbn">BOSS</span><div class="bbw"><div class="bbf" id="bbf"></div></div><span style="font-size:9px;color:#ff5050;font-family:'Courier New',monospace" id="bht">???</span></div>
+  <!-- BIGMAP -->
+  <div id="bigmap">
+    <canvas id="bigmap-canvas"></canvas>
+    <button class="bm-close" onclick="closeBigmap()">✕ ЗАКРЫТЬ</button>
+  </div>
+ 
+  <!-- START -->
+  <div id="overlay-start">
+    <div class="ov-t">⚙ IRON WASTES ⚙</div>
+    <div class="ov-s">MEX WARS // v5.0 — SAFE ZONE UPDATE</div>
+    <div style="font-size:9px;color:#506020;margin:2px 0">Безопасная зона · Турели · Чемпионы · Сохранение</div>
+    <div style="font-size:9px;color:#8a9040;text-align:center;line-height:2;margin-bottom:4px;font-family:'Courier New',monospace">
+      Джойстик — движение | SLOT1/SLOT2 — огонь<br>SHOP у торговца | MECH / INV — меню
+    </div>
+    <button class="ov-btn" onclick="startGame()">[ ЗАПУСТИТЬ МЕХ ]</button>
+    <div id="save-info" style="font-size:9px;color:#8a9040;margin-top:4px;font-family:'Courier New',monospace"></div>
+  </div>
+ 
+  <!-- LEVEL UP -->
+  <div id="overlay-lvl">
+    <div style="font-size:16px;color:#d4c040;letter-spacing:2px;font-family:'Courier New',monospace;text-shadow:0 0 20px #d4c04088">▲ LEVEL UP!</div>
+    <div style="font-size:10px;color:#a0a060;font-family:'Courier New',monospace">Выбери навык:</div>
+    <div id="skc" style="display:flex;flex-direction:column;gap:5px"></div>
+    <div style="font-size:9px;color:#808050;font-family:'Courier New',monospace" id="skpts"></div>
+  </div>
+ 
+  <!-- PANEL -->
+  <div id="panel">
+    <div id="ptabs">
+      <button class="ptab on" id="t-inv" onclick="sw('inv')">📦 ИНВЕНТ.</button>
+      <button class="ptab" id="t-mech" onclick="sw('mech')">⚙ МЕХ</button>
+      <button class="ptab" id="t-shop" onclick="sw('shop')">🏪 МАГАЗИН</button>
+      <button class="ptab" id="t-quest" onclick="sw('quest')">📋 ЗАДАНИЯ</button>
+      <button class="pcx" onclick="cp()">✕</button>
+    </div>
+    <div id="pbody"></div>
+  </div>
+</div>
+ 
+<!-- CONTROLS -->
+<div id="ctrl">
+  <!-- LEFT: weapon slots -->
+  <div id="wslots">
+    <button class="wslot-btn ws1 wempty" id="wb1" ontouchstart="ft(0,event)" onclick="ft(0,null)">
+      <span class="ws-icon" id="wi1">⚫</span>
+      <span class="ws-name" id="wn1">ПУСТО</span>
+    </button>
+    <button class="wslot-btn ws2 wempty" id="wb2" ontouchstart="ft(1,event)" onclick="ft(1,null)">
+      <span class="ws-icon" id="wi2">⚫</span>
+      <span class="ws-name" id="wn2">ПУСТО</span>
+    </button>
+  </div>
+  <!-- CENTER: transparent joystick -->
+  <div id="jpad"><div id="jbase"><div id="jknob"></div></div></div>
+  <!-- RIGHT: autobattle -->
+  <div id="rightcol">
+    <button id="auto-btn" class="off" onclick="toggleAuto()">
+      <span class="auto-icon">🤖</span>
+      <span class="auto-label" id="auto-lbl">АВТО</span>
+      <span style="font-size:8px" id="auto-state">ВЫКЛ</span>
+    </button>
+  </div>
+</div>
+</div>
 <script>
- // ═══════════════════════════════════
-// AUDIO ENGINE (Web Audio API)
 // ═══════════════════════════════════
-let AC = null;
-function ia() { 
-  if (AC) return; 
-  try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} 
+// AUDIO
+// ═══════════════════════════════════
+let AC=null;
+function ia(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}
+function psh(tp){ia();if(!AC)return;try{const o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);const t=AC.currentTime;if(tp==='ballistic'){o.type='sawtooth';o.frequency.setValueAtTime(220,t);o.frequency.exponentialRampToValueAtTime(55,t+.09);g.gain.setValueAtTime(.13,t);g.gain.exponentialRampToValueAtTime(.001,t+.1);o.start(t);o.stop(t+.1);}else if(tp==='energy'){o.type='sine';o.frequency.setValueAtTime(1200,t);o.frequency.exponentialRampToValueAtTime(500,t+.07);g.gain.setValueAtTime(.08,t);g.gain.exponentialRampToValueAtTime(.001,t+.07);o.start(t);o.stop(t+.07);}else{o.type='triangle';o.frequency.setValueAtTime(140,t);o.frequency.exponentialRampToValueAtTime(35,t+.17);g.gain.setValueAtTime(.16,t);g.gain.exponentialRampToValueAtTime(.001,t+.18);o.start(t);o.stop(t+.18);}}catch(e){}}
+ 
+// ═══════════════════════════════════
+// SAVE
+// ═══════════════════════════════════
+function saveGame(){try{localStorage.setItem('iw_s',JSON.stringify({p:G.p,zone:G.zone,ts:Date.now()}));}catch(e){}}
+function loadGame(){try{const r=localStorage.getItem('iw_s');return r?JSON.parse(r):null;}catch(e){return null;}}
+ 
+// ═══════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════
+const WW=1000,WH=1000,PPT=32,VIEW_R=28,AI_FULL=20,AI_LITE=50;
+// Safe zone (center 50,50 to 65,65)
+const SZ_X=44,SZ_Y=44,SZ_W=16,SZ_H=16; // safe zone tiles
+const SZ_CX=SZ_X+SZ_W/2,SZ_CY=SZ_Y+SZ_H/2;
+const SPAWN_X=52,SPAWN_Y=52; // player spawn inside safe zone
+ 
+// ═══════════════════════════════════
+// TERRAIN
+// ═══════════════════════════════════
+function noise2(x,y,s){const n=Math.sin(x*127.1+y*311.7+s*754.3)*43758.5453;return n-Math.floor(n);}
+function smN(x,y,s){const fx=Math.floor(x),fy=Math.floor(y),tx=x-fx,ty=y-fy;const a=noise2(fx,fy,s),b=noise2(fx+1,fy,s),c=noise2(fx,fy+1,s),d=noise2(fx+1,fy+1,s);return a*(1-tx)*(1-ty)+b*tx*(1-ty)+c*(1-tx)*ty+d*tx*ty;}
+ 
+function baseTerrainAt(tx,ty,zone){
+  // FLAT OPEN area in center (radius 80 from spawn)
+  const dx=tx-SPAWN_X,dy=ty-SPAWN_Y;
+  const d=Math.sqrt(dx*dx+dy*dy);
+  if(d<80)return'ground';
+ 
+  const n=smN(tx*.04,ty*.04,zone*100)+smN(tx*.12,ty*.12,zone*200)*.35+smN(tx*.3,ty*.3,zone*300)*.15;
+  const rx=((tx%38)+38)%38,ry=((ty%38)+38)%38;
+  if(rx<2||ry<2)return'road';
+  // much fewer walls/rocks — raised thresholds
+  if(n>0.92)return'wall';
+  if(n>0.85)return'rock';
+  if(n<0.12)return'water';
+  if(n<0.22)return'grass';
+  return'ground';
 }
-function psh(tp) {
-  ia(); if (!AC) return;
-  try {
-    const o = AC.createOscillator(), g = AC.createGain();
-    o.connect(g); g.connect(AC.destination);
-    const t = AC.currentTime;
-    if (tp === 'ballistic') {
-      o.type = 'sawtooth'; o.frequency.setValueAtTime(220, t);
-      o.frequency.exponentialRampToValueAtTime(55, t + .09);
-      g.gain.setValueAtTime(.13, t); g.gain.exponentialRampToValueAtTime(.001, t + .1);
-      o.start(t); o.stop(t + .1);
-    } else if (tp === 'energy') {
-      o.type = 'sine'; o.frequency.setValueAtTime(1200, t);
-      o.frequency.exponentialRampToValueAtTime(500, t + .07);
-      g.gain.setValueAtTime(.08, t); g.gain.exponentialRampToValueAtTime(.001, t + .07);
-      o.start(t); o.stop(t + .07);
-    } else {
-      o.type = 'triangle'; o.frequency.setValueAtTime(140, t);
-      o.frequency.exponentialRampToValueAtTime(35, t + .17);
-      g.gain.setValueAtTime(.16, t); g.gain.exponentialRampToValueAtTime(.001, t + .18);
-      o.start(t); o.stop(t + .18);
+ 
+function terrainAt(tx,ty,zone){
+  // Safe zone interior — all grass/ground
+  if(tx>=SZ_X&&tx<SZ_X+SZ_W&&ty>=SZ_Y&&ty<SZ_Y+SZ_H){
+    // outer ring = wall (fence)
+    const onEdge=(tx===SZ_X||tx===SZ_X+SZ_W-1||ty===SZ_Y||ty===SZ_Y+SZ_H-1);
+    if(onEdge){
+      // gates (openings) on each side
+      const mx=Math.floor(SZ_X+SZ_W/2),my=Math.floor(SZ_Y+SZ_H/2);
+      if((tx===SZ_X||tx===SZ_X+SZ_W-1)&&Math.abs(ty-my)<=1)return'road'; // W/E gates
+      if((ty===SZ_Y||ty===SZ_Y+SZ_H-1)&&Math.abs(tx-mx)<=1)return'road'; // N/S gates
+      return'fence';
     }
-  } catch (e) {}
-}
-
-// ═══════════════════════════════════
-// SAVE / LOAD SYSTEM
-// ═══════════════════════════════════
-function saveGame() {
-  try { localStorage.setItem('iw_s_3d', JSON.stringify({ p: G.p, zone: G.zone, ts: Date.now() })); } catch (e) {}
-}
-function loadGame() {
-  try { const r = localStorage.getItem('iw_s_3d'); return r ? JSON.parse(r) : null; } catch (e) { return null; }
-}
-
-// ═══════════════════════════════════
-// CONSTANTS & GAME DATABASES (100% ORIGINAL)
-// ═══════════════════════════════════
-const WW = 1000, WH = 1000;
-const T_SIZE = 4; 
-const VIEW_R = 12; 
-
-const SZ_X = 44, SZ_Y = 44, SZ_W = 16, SZ_H = 16;
-const SPAWN_X = 52, SPAWN_Y = 52;
-
-// ПОЛНЫЙ ОРИГИНАЛЬНЫЙ СПИСОК ОРУЖИЯ (СТРОГО КАК В ТВОЕМ ФАЙЛЕ)
-const WEAPONS = {
-  'p1': { id: 'p1', n: 'АВТОПУШКА-1', t: 'ballistic', d: 7, e: 2, cd: 220, r: 7, c: 0, g: '⚙', lvl: 1, desc: 'Базовое баллистическое орудие.' },
-  'p2': { id: 'p2', n: 'АВТОПУШКА-2', t: 'ballistic', d: 13, e: 3, cd: 200, r: 8, c: 450, g: '⚙⚙', lvl: 3, desc: 'Модифицированная спаренная автопушка.' },
-  'p3': { id: 'p3', n: 'ЛЕНТА СМЕРТИ', t: 'ballistic', d: 22, e: 4, cd: 170, r: 9, c: 1200, g: '⚙⚙⚙', lvl: 6, desc: 'Тяжелый скорострельный пулемет.' },
-  'e1': { id: 'e1', n: 'ЛАЗЕР-1', t: 'energy', d: 11, e: 5, cd: 350, r: 8, c: 300, g: '🔋', lvl: 2, desc: 'Энергетический луч, высокая точность.' },
-  'e2': { id: 'e2', n: 'ФАЗОТРОН', t: 'energy', d: 24, e: 8, cd: 300, r: 9, c: 850, g: '🔋🔋', lvl: 5, desc: 'Выпускает концентрированные сгустки плазмы.' },
-  'e3': { id: 'e3', n: 'ЛУЧ АДРОНА', t: 'energy', d: 45, e: 13, cd: 260, r: 11, c: 2200, g: '💥', lvl: 8, desc: 'Экспериментальное плазменное расщепление.' },
-  'p4': { id: 'p4', n: 'РЕЛЬСОТРОН', t: 'ballistic', d: 75, e: 18, cd: 600, r: 13, c: 3500, g: '🔱', lvl: 10, desc: 'Сверхмощное кинетическое орудие прорыва.' },
-  'e4': { id: 'e4', n: 'СИНГУЛЯР', t: 'energy', d: 110, e: 25, cd: 750, r: 12, c: 5000, g: '🌌', lvl: 12, desc: 'Генерирует микро-черные дыры.' },
-  'p5': { id: 'p5', n: 'ВУЛКАН МК-2', t: 'ballistic', d: 18, e: 3, cd: 110, r: 8.5, c: 2100, g: '💥', lvl: 7, desc: 'Шестиствольный авиационный пулемет.' },
-  'p6': { id: 'p6', n: 'ГАУСС-ВИНТОВКА', t: 'ballistic', d: 95, e: 22, cd: 700, r: 14, c: 4800, g: '⚡', lvl: 11, desc: 'Снайперское орудие разгона снаряда.' },
-  'p7': { id: 'p7', n: 'ТЯЖЕЛЫЙ КЛИПЕР', t: 'ballistic', d: 35, e: 6, cd: 250, r: 9, c: 1700, g: '⚔', lvl: 5, desc: 'Крупнокалиберное штурмовое орудие.' },
-  'p8': { id: 'p8', n: 'ДРОБОВИК КРАКЕН', t: 'ballistic', d: 55, e: 10, cd: 400, r: 5, c: 2600, g: '🦈', lvl: 8, desc: 'Колоссальный урон на ближней дистанции.' },
-  'p9': { id: 'p9', n: 'МАГНИТНЫЙ ШТОРМ', t: 'ballistic', d: 42, e: 8, cd: 190, r: 10, c: 3900, g: '🌀', lvl: 9, desc: 'Кинетический ускоритель со стальной дробью.' },
-  'p10': { id: 'p10', n: 'РЕД-ГИДРА', t: 'ballistic', d: 130, e: 28, cd: 850, r: 15, c: 7500, g: '🐉', lvl: 14, desc: 'Артиллерийский комплекс разрушения.' },
-  'e5': { id: 'e5', n: 'КВАНТОВЫЙ РАЗРЯДНИК', t: 'energy', d: 60, e: 15, cd: 450, r: 10.5, c: 3200, g: '🔮', lvl: 9, desc: 'Ионизирует воздух дуговым разрядом.' },
-  'e6': { id: 'e6', n: 'ПЛАЗМЕННЫЙ РЕЗАК', t: 'energy', d: 32, e: 7, cd: 210, r: 7.5, c: 1450, g: '🔥', lvl: 4, desc: 'Высокотемпературный поток частиц.' },
-  'e7': { id: 'e7', n: 'ФОТОННЫЙ ИЗЛУЧАТЕЛЬ', t: 'energy', d: 80, e: 20, cd: 520, r: 11.5, c: 4300, g: '☀️', lvl: 11, desc: 'Пакетный лазер сквозного пробития.' },
-  'e8': { id: 'e8', n: 'ТЕНЕВОЙ ДЕСТРУКТОР', t: 'energy', d: 150, e: 32, cd: 900, r: 13, c: 8000, g: '👁️', lvl: 15, desc: 'Аннигилирует материю нестабильной пустотой.' },
-  'e9': { id: 'e9', n: 'ИМПУЛЬСНИК НЕОН', t: 'energy', d: 20, e: 4, cd: 150, r: 8, c: 980, g: '💎', lvl: 3, desc: 'Быстродействующий волновой карабин.' },
-  'e10': { id: 'e10', n: 'ГОРЕЛОК СУДЬБЫ', t: 'energy', d: 210, e: 45, cd: 1200, r: 14, c: 12000, g: '👑', lvl: 18, desc: 'Прототип Судного Дня корпорации Arasaka.' }
-};
-
-// ПОЛНЫЙ ОРИГИНАЛЬНЫЙ СПИСОК ДРОНОВ
-const DRONES = {
-  'd1': { id: 'd1', n: 'ДРОН-ЗАЩИТНИК', t: 'def', v: 15, c: 600, desc: '+15% к максимальной прочности корпуса.' },
-  'd2': { id: 'd2', n: 'ДРОН-ГЕНЕРАТОР', t: 'eng', v: 12, c: 800, desc: '+12% к максимальному запасу энергии.' },
-  'd3': { id: 'd3', n: 'УСКОРИТЕЛЬ ИИ', t: 'cd', v: 10, c: 1500, desc: 'Снижает перезарядку всего оружия на 10%.' },
-  'd4': { id: 'd4', n: 'ОБОЙМА-ЭКСТРА', t: 'dmg', v: 8, c: 2000, desc: 'Увеличивает весь наносимый урон на 8%.' },
-  'd5': { id: 'd5', n: 'ТИТАНОВЫЙ БАСТИОН', t: 'def', v: 30, c: 2500, desc: '+30% к максимальной прочности корпуса.' },
-  'd6': { id: 'd6', n: 'ТЕМНАЯ МАТЕРИЯ', t: 'dmg', v: 18, c: 4500, desc: 'Увеличивает весь наносимый урон на 18%.' }
-};
-
-// ПОЛНЫЙ ОРИГИНАЛЬНЫЙ СПИСОК ВСПОМОГАТЕЛЬНЫХ МОДУЛЕЙ
-const AUX = {
-  'a1': { id: 'a1', n: 'НАНО-ОБШИВКА', t: 'hp_reg', v: 1, c: 500, desc: 'Пассивно восстанавливает 1 HP в секунду.' },
-  'a2': { id: 'a2', n: 'РЕАКТОР ТОР', t: 'en_reg', v: 1, c: 750, desc: 'Пассивно восстанавливает 1 EN в секунду.' },
-  'a3': { id: 'a3', n: 'ОПТИКА КВАНТ', t: 'range', v: 1.5, c: 1200, desc: 'Увеличивает дальность атаки на +1.5 тайла.' },
-  'a4': { id: 'a4', n: 'РЕГЕНЕРАТОР МК2', t: 'hp_reg', v: 3, c: 1800, desc: 'Пассивно восстанавливает 3 HP в секунду.' },
-  'a5': { id: 'a5', n: 'ГИПЕР-НАГНЕТАТЕЛЬ', t: 'en_reg', v: 4, c: 2400, desc: 'Пассивно восстанавливает 4 EN в секунду.' }
-};
-
-const SKILLS = {
-  's_hp': { n: 'Усиление корпуса', d: '+15 Макс. HP', f: p => { p.mhp += 15; p.hp += 15; } },
-  's_en': { n: 'Энергоемкость', d: '+10 Макс. Энергии', f: p => { p.men += 10; p.en += 10; } },
-  's_reg': { n: 'Нано-регенерация', d: '+0.5 HP/сек', f: p => { p.sk_hpreg = (p.sk_hpreg || 0) + 0.5; } },
-  's_eng': { n: 'Потоковый реактор', d: '+0.5 EN/сек', f: p => { p.sk_enreg = (p.sk_enreg || 0) + 0.5; } },
-  's_dmg': { n: 'Калибровка приводов', d: '+5% к урону', f: p => { p.sk_dmg = (p.sk_dmg || 0) + 0.05; } }
-};
-
-const ZONES = [
-  { id: 'city', name: 'ГОРОД', acc: '#d4c040', ground: '#2a2c1a', wall: '#555a35', water: '#152535', safe: '#354520', fence: '#666a40', rock: '#4a4435', mon: ['КрысоБот', 'Часовой', 'СкрапПёс', 'Бронепехота'], loot: ['Плата', 'Схема', 'Лом', 'Масло', 'Кость'], bossName: 'СТРАЖ ГОРОДА', bossLoot: ['МатрицаИИ', 'ЖетонСтражника', 'СхемаTitan'] },
-  { id: 'wastes', name: 'ПУСТОШИ', acc: '#e07020', ground: '#4a3520', wall: '#705030', water: '#201510', safe: '#504025', fence: '#7c6035', rock: '#5a4a35', mon: ['Скорпион', 'МутантВолк', 'Краб', 'Пустынник'], loot: ['Клешня', 'Яд', 'Панцирь', 'Клык', 'Кристалл'], bossName: 'ПУСТЫННЫЙ ТИТАН', bossLoot: ['ЯдТитана', 'ПанцирьБосса', 'ЯдроПустыни'] },
-  { id: 'ruins', name: 'РУИНЫ', acc: '#9070c0', ground: '#202030', wall: '#404055', water: '#101020', safe: '#303045', fence: '#4a4a60', rock: '#353545', mon: ['СтражРуин', 'Призрак', 'ПоражМех', 'Теневик'], loot: ['КристаллРуин', 'Осколок', 'Чип', 'Ядро', 'Тень'], bossName: 'ПУСТОТНЫЙ КОЛОСС', bossLoot: ['ЯдроПустоты', 'ФрагментКолосса', 'СхемаБога'] }
-];
-
-const LOOT_P = {
-  'Лом': 15, 'Масло': 20, 'Кость': 22, 'Плата': 25, 'Схема': 35, 'Клык': 45, 'Клешня': 50, 'Панцирь': 65, 'Кристалл': 80, 'Яд': 85,
-  'Чип': 100, 'КристаллРуин': 110, 'Ядро': 130, 'Осколок': 140, 'Тень': 160, 'ЖетонСтражника': 350, 'МатрицаИИ': 500, 'РЕД-СПЛАВ': 550,
-  'ПанцирьБосса': 580, 'СхемаTitan': 600, 'БОС-КОР': 650, 'ЯдТитана': 700, 'КВАНТ': 750, 'ЯдроПустыни': 820, 'ФрагментКолосса': 850,
-  'ЯдроПустоты': 1000, 'СхемаБога': 1400
-};
-
-const Q_GIVERS = [
-  { n: 'МЕХАНИК ГРАНТ', x: 50, y: 48, g: '👨‍🔧', r: 'Рад видеть живого пилота в этом секторе.' },
-  { n: 'ТОРГОВЕЦ КРИС', x: 46, y: 52, g: '🤠', r: 'Нужны запчасти? У меня лучший товар в Пустошах.' },
-  { n: 'ДРОН-КУРЬЕР T4', x: 54, y: 53, g: '🤖', r: 'Бззз... Обнаружены новые директивы Центра... Пшш.' }
-];
-
-const QUESTS_DB = [
-  { id: 'q1', giver: 'МЕХАНИК ГРАНТ', n: 'Сбор металлолома', desc: 'Собери Лом (3 шт.) для починки генератора ворот.', t: 'loot', tgt: 'Лом', req: 3, rCr: 300, rXp: 100 },
-  { id: 'q2', giver: 'МЕХАНИК ГРАНТ', n: 'Зачистка периметра', desc: 'Уничтожь любых врагов (5 шт.) рядом со станцией.', t: 'kill', req: 5, rCr: 500, rXp: 200 },
-  { id: 'q3', giver: 'ТОРГОВЕЦ КРИС', n: 'Редкие микросхемы', desc: 'Принеси Плата (2 шт.) из разрушенных роботов.', t: 'loot', tgt: 'Плата', req: 2, rCr: 600, rXp: 150 },
-  { id: 'q4', giver: 'ДРОН-КУРЬЕР T4', n: 'Охота на охотников', desc: 'Уничтожь Часовой (3 шт.) в городской зоне.', t: 'kill_type', tgt: 'Часовой', req: 3, rCr: 700, rXp: 300 }
-];
-
-// ═══════════════════════════════════
-// GLOBAL GAME STATE VARIABLES
-// ═══════════════════════════════════
-let G = {
-  zone: 0, jd: { x: 0, y: 0 },
-  p: {
-    wx: SPAWN_X, wy: SPAWN_Y, hp: 100, mhp: 100, en: 60, men: 60, lvl: 1, xp: 0, cr: 500,
-    w1: 'p1', w2: null, inv: {}, slots: { sw: null, se: null, sa: null }, skills: {}, skPoints: 0
-  },
-  monsters: [], bullets: [], items: [], turrets: [], texts: [],
-  auto: false, bID: null, lastTime: 0, isRun: false
-};
-
-let activeTab = 'inv', activeQG = null, curQ = null;
-let jID = null, jA = false, jO = { x: 0, y: 0 };
-const MJ = 45;
-
-// ═══════════════════════════════════
-// THREE.JS CORE ENGINE VARIABLES
-// ═══════════════════════════════════
-let scene, camera, renderer, loader;
-let playerMesh = null;
-let chunksMap = new Map();
-let loaded3DObjects = new Map();
-
-const MATS = {
-  bullet: new THREE.MeshBasicMaterial({ color: 0xfff000 }),
-  player_fallback: new THREE.MeshStandardMaterial({ color: 0x5a6020, roughness: 0.5 }),
-  enemy: new THREE.MeshStandardMaterial({ color: 0x902020, metalness: 0.7 }),
-  boss: new THREE.MeshStandardMaterial({ color: 0xff1010, roughness: 0.2 }),
-  turret: new THREE.MeshStandardMaterial({ color: 0x404040, metalness: 0.9 }),
-  item: new THREE.MeshStandardMaterial({ color: 0x00ff88, emissive: 0x00aa44 }),
-  questgiver: new THREE.MeshStandardMaterial({ color: 0x30a0ff, emissive: 0x104080 })
-};
-
-const GEOS = {
-  box: new THREE.BoxGeometry(1, 1, 1),
-  sphere: new THREE.SphereGeometry(0.2, 8, 8),
-  cylinder: new THREE.CylinderGeometry(0.4, 0.4, 1.2, 8),
-  cone: new THREE.ConeGeometry(0.3, 0.8, 8),
-  plane: new THREE.PlaneGeometry(T_SIZE, T_SIZE)
-};
-
-function init3DEngine() {
-  const container = document.getElementById('gc_container');
-  
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0a0c04);
-  scene.fog = new THREE.FogExp2(0x0a0c04, 0.025);
-
-  camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
-  camera.position.set(0, 18, 12);
-
-  renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(container.clientWidth, container.clientHeight);
-  renderer.shadowMap.enabled = true;
-  container.appendChild(renderer.domElement);
-
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-  scene.add(ambientLight);
-
-  const dirLight = new THREE.DirectionalLight(0xfff5e0, 0.8);
-  dirLight.position.set(20, 40, 20);
-  dirLight.castShadow = true;
-  dirLight.shadow.mapSize.width = 1024;
-  dirLight.shadow.mapSize.height = 1024;
-  scene.add(dirLight);
-
-  loader = new THREE.GLTFLoader();
-  
-  loader.load('Mech4_final.glb', function (gltf) {
-    playerMesh = gltf.scene;
-    playerMesh.traverse(child => {
-      if (child.isMesh) {
-        child.castShadow = true;
-        child.receiveShadow = true;
-      }
-    });
-    playerMesh.scale.set(1.2, 1.2, 1.2);
-    scene.add(playerMesh);
-    showNotif("3D модель меха успешно загружена!");
-  }, undefined, function (error) {
-    console.error("Не удалось загрузить Mech4_final.glb, применен fallback цилиндр.", error);
-    playerMesh = new THREE.Mesh(GEOS.cylinder, MATS.player_fallback);
-    scene.add(playerMesh);
-  });
-
-  window.addEventListener('resize', onWindowResize, false);
-}
-
-function onWindowResize() {
-  const container = document.getElementById('gc_container');
-  camera.aspect = container.clientWidth / container.clientHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(container.clientWidth, container.clientHeight);
-}
- // ═══════════════════════════════════
-// PROCEDURAL WORLD MAP ENGINE
-// ═══════════════════════════════════
-// Возвращает тип тайла по глобальным координатам (x, y)
-function getTileType(x, y) {
-  if (x < 0 || x >= WW || y < 0 || y >= WH) return 'wall';
-  // Границы безопасной зоны
-  if (x >= SZ_X && x < SZ_X + SZ_W && y >= SZ_Y && y < SZ_Y + SZ_H) {
-    // Внутренний забор базы
-    if (x === SZ_X || x === SZ_X + SZ_W - 1 || y === SZ_Y || y === SZ_Y + SZ_H - 1) {
-      // Оставляем проходы на севере, юге, западе и востоке
-      if (x === 52 || x === 51 || y === 52 || y === 51) return 'safe';
-      return 'fence';
-    }
-    return 'safe';
+    return'safe'; // inside safe zone
   }
-  // Математическая генерация естественных препятствий (озера, горы, стены)
-  const n1 = Math.sin(x * 0.15) * Math.cos(y * 0.15);
-  const n2 = Math.sin(x * 0.05) * Math.sin(y * 0.05);
-  const v = n1 * 0.6 + n2 * 0.4;
-  if (v < -0.45) return 'water';
-  if (v > 0.42) return 'wall';
-  if (v > 0.32) return 'rock';
-  return 'ground';
+  return baseTerrainAt(tx,ty,zone);
 }
-
-// Динамическая генерация и деструкция 3D чанков земли вокруг игрока
-function update3DWorld() {
-  const pX = Math.floor(G.p.wx);
-  const pY = Math.floor(G.p.wy);
-  const currentZone = ZONES[G.zone];
-  const keepChunks = new Set();
-
-  // Сканируем область видимости вокруг пилота
-  for (let x = pX - VIEW_R; x <= pX + VIEW_R; x++) {
-    for (let y = pY - VIEW_R; y <= pY + VIEW_R; y++) {
-      const key = `${x},${y}`;
-      keepChunks.add(key);
-
-      if (!chunksMap.has(key)) {
-        const type = getTileType(x, y);
-        let matColor = currentZone.ground;
-        let height = 0.01;
-
-        if (type === 'wall') { matColor = currentZone.wall; height = 3.5; }
-        else if (type === 'rock') { matColor = currentZone.rock; height = 1.8; }
-        else if (type === 'fence') { matColor = currentZone.fence; height = 2.2; }
-        else if (type === 'water') { matColor = currentZone.water; height = 0.01; }
-        else if (type === 'safe') { matColor = currentZone.safe; }
-
-        let mesh;
-        if (height > 0.1) {
-          // Для вертикальных стен и препятствий создаем коробку
-          const geo = new THREE.BoxGeometry(T_SIZE, height, T_SIZE);
-          const mat = new THREE.MeshStandardMaterial({ color: matColor, roughness: 0.7, metalness: 0.1 });
-          mesh = new THREE.Mesh(geo, mat);
-          mesh.position.set(x * T_SIZE, height / 2, y * T_SIZE);
-          mesh.castShadow = true;
-          mesh.receiveShadow = true;
-        } else {
-          // Для плоской земли
-          const mat = new THREE.MeshStandardMaterial({ color: matColor, roughness: 0.9 });
-          mesh = new THREE.Mesh(GEOS.plane, mat);
-          mesh.rotation.x = -Math.PI / 2;
-          mesh.position.set(x * T_SIZE, 0, y * T_SIZE);
-          mesh.receiveShadow = true;
-        }
-
-        scene.add(mesh);
-        chunksMap.set(key, mesh);
-      }
+ 
+const CHUNKS=new Map();
+function getChunk(cx,cy){const k=cx+','+cy;if(CHUNKS.has(k))return CHUNKS.get(k);const tiles=[];for(let y=0;y<16;y++){tiles[y]=[];for(let x=0;x<16;x++)tiles[y][x]=terrainAt(cx*16+x,cy*16+y,G?G.zone:0);}const ch={tiles};CHUNKS.set(k,ch);return ch;}
+function getTile(tx,ty){if(tx<0||ty<0||tx>=WW||ty>=WH)return'wall';const ch=getChunk(Math.floor(tx/16),Math.floor(ty/16));return ch.tiles[ty%16][tx%16];}
+function isBlocked(wx,wy){if(wx<1||wy<1||wx>=WW-1||wy>=WH-1)return true;const t=getTile(Math.floor(wx),Math.floor(wy));return t==='wall'||t==='water'||t==='fence';}
+function inSafeZone(wx,wy){return wx>=SZ_X&&wx<SZ_X+SZ_W&&wy>=SZ_Y&&wy<SZ_Y+SZ_H;}
+ 
+// ═══════════════════════════════════
+// DATA
+// ═══════════════════════════════════
+const ZONES=[
+  {id:'city',  name:'ГОРОД',   acc:'#d4a030',
+   ground:'#484830',ground2:'#383820',road:'#686858',wall:'#887868',fence:'#807040',
+   water:'#1a2530',grass:'#486030',rock:'#706048',safe:'#588038',
+   mon:['КрысоБот','Часовой','СкрапПёс','Бронепехота'],
+   loot:['Плата','Схема','Лом','Масло','Кость'],
+   bossName:'СТРАЖ ГОРОДА',bossLoot:['МатрицаИИ','ЖетонСтражника','СхемаTitan']},
+  {id:'wastes',name:'ПУСТОШИ', acc:'#e07020',
+   ground:'#5a4020',ground2:'#4a3018',road:'#7a6030',wall:'#8a7040',fence:'#907838',
+   water:'#201808',grass:'#4a3818',rock:'#806038',safe:'#6a5830',
+   mon:['Скорпион','МутантВолк','Краб','Пустынник'],
+   loot:['Клешня','Яд','Панцирь','Клык','Кристалл'],
+   bossName:'ПУСТЫННЫЙ ТИТАН',bossLoot:['ЯдТитана','ПанцирьБосса','ЯдроПустыни']},
+  {id:'ruins', name:'РУИНЫ',   acc:'#9070c0',
+   ground:'#303040',ground2:'#282838',road:'#484858',wall:'#605870',fence:'#584868',
+   water:'#101018',grass:'#283038',rock:'#504870',safe:'#404858',
+   mon:['СтражРуин','Призрак','ПоражМех','Теневик'],
+   loot:['КристаллРуин','Осколок','Чип','Ядро','Тень'],
+   bossName:'ПУСТОТНЫЙ КОЛОСС',bossLoot:['ЯдроПустоты','ФрагментКолосса','СхемаБога']}
+];
+const LOOT_P={
+  'Плата':25,'Схема':35,'Лом':15,'Масло':20,'Кость':22,
+  'Клешня':50,'Яд':85,'Панцирь':65,'Клык':45,'Кристалл':80,
+  'КристаллРуин':110,'Осколок':140,'Чип':100,'Ядро':130,'Тень':160,
+  'МатрицаИИ':500,'ЖетонСтражника':350,'СхемаTitan':600,
+  'ЯдТитана':700,'ПанцирьБосса':580,'ЯдроПустыни':820,
+  'ЯдроПустоты':1000,'ФрагментКолосса':850,'СхемаБога':1400,
+  'БОС-КОР':650,'РЕД-СПЛАВ':550,'КВАНТ':750
+};
+ 
+// ── WEAPONS: ballistic (lv 1,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95)
+// energy (lv 1,6,11,16,21,27,33,39,46,53,61,69,77,86,95)
+// rocket (lv 2,7,13,19,26,32,38,45,52,59,67,75,83,92)
+// Prices /10 for easy testing
+const WEAPONS=[
+  // BALLISTIC (20 items, lv1→95)
+  {id:'p1',n:'ПИСТОЛЕТ-1',    t:'ballistic',dmg:22,  rng:240,rof:1.8, ec:5,  p:0,    lv:1, sell:0,   d:'Стартовый'},
+  {id:'p2',n:'М9 ШТУРМ',      t:'ballistic',dmg:38,  rng:260,rof:1.6, ec:8,  p:60,   lv:5, sell:30,  d:'Скорострельный'},
+  {id:'p3',n:'АК-МЕХ',        t:'ballistic',dmg:58,  rng:280,rof:1.4, ec:11, p:160,  lv:10,sell:80,  d:'Штурмовой'},
+  {id:'p4',n:'ПАК-44',        t:'ballistic',dmg:85,  rng:300,rof:1.2, ec:15, p:350,  lv:15,sell:175, d:'Усиленный'},
+  {id:'p5',n:'ПУЛЕМЁТ-Л',     t:'ballistic',dmg:120, rng:315,rof:1.0, ec:19, p:700,  lv:20,sell:350, d:'Высокий темп'},
+  {id:'p6',n:'ПУЛЕМЁТ-Х',     t:'ballistic',dmg:165, rng:330,rof:0.9, ec:23, p:1400, lv:25,sell:700, d:'Тяжёлый'},
+  {id:'p7',n:'АВТОПУШКА-L',   t:'ballistic',dmg:220, rng:345,rof:0.8, ec:28, p:2500, lv:30,sell:1250,d:'Мощная'},
+  {id:'p8',n:'АВТОПУШКА-H',   t:'ballistic',dmg:290, rng:360,rof:0.7, ec:33, p:4000, lv:35,sell:2000,d:'Тяжёлая пушка'},
+  {id:'p9',n:'ГАУСС МК1',     t:'ballistic',dmg:380, rng:390,rof:0.6, ec:39, p:7000, lv:40,sell:3500,d:'Магнитный'},
+  {id:'p10',n:'ГАУСС МК2',    t:'ballistic',dmg:490, rng:420,rof:0.55,ec:46, p:11000,lv:45,sell:5500,d:'Снайпер'},
+  {id:'p11',n:'РЕЛЬСОТРОН-S', t:'ballistic',dmg:640, rng:450,rof:0.5, ec:54, p:18000,lv:50,sell:9000,d:'Рельсовый'},
+  {id:'p12',n:'РЕЛЬСОТРОН-М', t:'ballistic',dmg:820, rng:475,rof:0.45,ec:63, p:28000,lv:55,sell:14000,d:'Мощнее'},
+  {id:'p13',n:'РЕЛЬСОТРОН-Х', t:'ballistic',dmg:1050,rng:500,rof:0.4, ec:73, p:44000,lv:60,sell:22000,d:'Экстремальный'},
+  {id:'p14',n:'МАГ-РЕЛЬС-1',  t:'ballistic',dmg:1350,rng:525,rof:0.35,ec:85, p:70000,lv:65,sell:35000,d:'Магнитный рельс'},
+  {id:'p15',n:'МАГ-РЕЛЬС-2',  t:'ballistic',dmg:1700,rng:550,rof:0.3, ec:98, p:110000,lv:70,sell:55000,d:'Усиленный'},
+  {id:'p16',n:'КВАЗАР-ПУШ',   t:'ballistic',dmg:2150,rng:570,rof:0.26,ec:113,p:170000,lv:75,sell:85000,d:'Ионный'},
+  {id:'p17',n:'ВОРТЕКС',      t:'ballistic',dmg:2700,rng:590,rof:0.22,ec:130,p:260000,lv:80,sell:130000,d:'Гравитационный'},
+  {id:'p18',n:'АННИГИЛЯТОР',  t:'ballistic',dmg:3400,rng:610,rof:0.18,ec:150,p:400000,lv:85,sell:200000,d:'Уничтожает всё'},
+  {id:'p19',n:'ГИПЕРИОН',     t:'ballistic',dmg:4300,rng:630,rof:0.15,ec:172,p:620000,lv:90,sell:310000,d:'Гиперзвуковой'},
+  {id:'p20',n:'АПОФЕОЗ',      t:'ballistic',dmg:5500,rng:650,rof:0.12,ec:198,p:950000,lv:95,sell:475000,d:'Абсолютное орудие'},
+  // ENERGY (15 items, lv1→95)
+  {id:'e1',n:'ЛАЗЕР МК1',     t:'energy',   dmg:18,  rng:180,rof:4.0, ec:8,  p:40,   lv:1, sell:20,  d:'Быстрый луч'},
+  {id:'e2',n:'ЛАЗЕР МК2',     t:'energy',   dmg:34,  rng:196,rof:3.5, ec:13, p:130,  lv:6, sell:65,  d:'Улучшенный'},
+  {id:'e3',n:'ЛАЗЕР МК3',     t:'energy',   dmg:58,  rng:212,rof:3.0, ec:19, p:330,  lv:11,sell:165, d:'Мощный'},
+  {id:'e4',n:'ПЛАЗМА МК1',    t:'energy',   dmg:90,  rng:228,rof:2.5, ec:27, p:700,  lv:16,sell:350, d:'Плазменный'},
+  {id:'e5',n:'ПЛАЗМА МК2',    t:'energy',   dmg:135, rng:242,rof:2.1, ec:37, p:1500, lv:21,sell:750, d:'Усиленная плазма'},
+  {id:'e6',n:'ФАЗОН МК1',     t:'energy',   dmg:200, rng:256,rof:1.8, ec:49, p:3000, lv:27,sell:1500,d:'Фазовый луч'},
+  {id:'e7',n:'ФАЗОН МК2',     t:'energy',   dmg:290, rng:268,rof:1.5, ec:63, p:6000, lv:33,sell:3000,d:'Мощнее'},
+  {id:'e8',n:'МОЛНИЯ МК1',    t:'energy',   dmg:420, rng:280,rof:1.2, ec:80, p:11000,lv:39,sell:5500,d:'Цепная молния'},
+  {id:'e9',n:'МОЛНИЯ МК2',    t:'energy',   dmg:600, rng:292,rof:1.0, ec:100,p:20000,lv:46,sell:10000,d:'Дуговой разряд'},
+  {id:'e10',n:'ПСИ-ЛУЧ МК1',  t:'energy',   dmg:860, rng:305,rof:0.85,ec:123,p:35000,lv:53,sell:17500,d:'Психо-энергия'},
+  {id:'e11',n:'ПСИ-ЛУЧ МК2',  t:'energy',   dmg:1230,rng:318,rof:0.72,ec:150,p:60000,lv:61,sell:30000,d:'Усиленный пси'},
+  {id:'e12',n:'ЛУЧ ПУСТОТЫ',  t:'energy',   dmg:1750,rng:332,rof:0.6, ec:182,p:105000,lv:69,sell:52500,d:'Энергия пустоты'},
+  {id:'e13',n:'НОВА-ЛУЧ',     t:'energy',   dmg:2500,rng:346,rof:0.5, ec:220,p:180000,lv:77,sell:90000,d:'Взрыв энергии'},
+  {id:'e14',n:'ФОТОН-ЛУЧ',    t:'energy',   dmg:3500,rng:360,rof:0.4, ec:265,p:310000,lv:86,sell:155000,d:'Световой удар'},
+  {id:'e15',n:'ОМЕГА-ЛУЧ',    t:'energy',   dmg:5000,rng:375,rof:0.32,ec:320,p:540000,lv:95,sell:270000,d:'Абсолютный'},
+  // ROCKET (14 items, lv2→92)
+  {id:'r1',n:'РКТ-ПОД МК1',   t:'rocket',   dmg:45,  rng:260,rof:1.1, ec:18, p:70,   lv:2, sell:35,  d:'Базовый сплэш'},
+  {id:'r2',n:'РКТ-ПОД МК2',   t:'rocket',   dmg:78,  rng:278,rof:0.95,ec:26, p:200,  lv:7, sell:100, d:'Мощнее'},
+  {id:'r3',n:'КАССЕТНЫЙ МК1', t:'rocket',   dmg:120, rng:295,rof:0.82,ec:36, p:500,  lv:13,sell:250, d:'Разделяющийся'},
+  {id:'r4',n:'НАПАЛМ МК1',    t:'rocket',   dmg:175, rng:310,rof:0.7, ec:48, p:1100, lv:19,sell:550, d:'Зажигательный'},
+  {id:'r5',n:'НАПАЛМ МК2',    t:'rocket',   dmg:250, rng:325,rof:0.6, ec:62, p:2200, lv:26,sell:1100,d:'Интенсивный'},
+  {id:'r6',n:'ВУЛКАН МРЛ',    t:'rocket',   dmg:350, rng:340,rof:0.52,ec:78, p:4200, lv:32,sell:2100,d:'Многозарядный'},
+  {id:'r7',n:'АРМАГЕДДОН МК1',t:'rocket',   dmg:490, rng:355,rof:0.44,ec:96, p:8000, lv:38,sell:4000,d:'Мощный'},
+  {id:'r8',n:'МИКРО-РАКЕТЫ',  t:'rocket',   dmg:280, rng:320,rof:1.5, ec:60, p:14000,lv:45,sell:7000,d:'Быстрая серия'},
+  {id:'r9',n:'НОВА-РАКЕТА',   t:'rocket',   dmg:700, rng:370,rof:0.36,ec:120,p:25000,lv:52,sell:12500,d:'Взрыв'},
+  {id:'r10',n:'САМОНАВОД.',   t:'rocket',   dmg:950, rng:390,rof:0.3, ec:148,p:42000,lv:59,sell:21000,d:'Самонаводящаяся'},
+  {id:'r11',n:'ТОРНАДО МРЛ',  t:'rocket',   dmg:1300,rng:410,rof:0.25,ec:180,p:72000,lv:67,sell:36000,d:'Смерч'},
+  {id:'r12',n:'МЕГАТОННАЯ',   t:'rocket',   dmg:1800,rng:430,rof:0.2, ec:218,p:120000,lv:75,sell:60000,d:'Мегаудар'},
+  {id:'r13',n:'ЗВЁЗДНЫЙ ВЗРЫВ',t:'rocket',  dmg:2500,rng:450,rof:0.16,ec:265,p:200000,lv:83,sell:100000,d:'Звёздный'},
+  {id:'r14',n:'ОМЕГА-РАКЕТА', t:'rocket',   dmg:3500,rng:475,rof:0.13,ec:320,p:340000,lv:92,sell:170000,d:'Финальное'},
+  // UNIQUE (boss drops)
+  {id:'godshot',n:'⭐ DIVINE SHOT', t:'ballistic',dmg:8000,rng:700,rof:0.4,ec:80, p:0,lv:1,sell:5000,d:'Дроп с босса',unique:true},
+  {id:'voidb',  n:'⭐ VOID BEAM',   t:'energy',   dmg:7000,rng:500,rof:0.8,ec:100,p:0,lv:1,sell:6000,d:'Дроп с босса',unique:true},
+  {id:'omegar', n:'⭐ OMEGA ROCKET',t:'rocket',   dmg:9000,rng:550,rof:0.25,ec:130,p:0,lv:1,sell:7000,d:'Дроп с босса',unique:true},
+];
+ 
+// MODULES — batteries every 7-10 lvls, generators every 8-11, armor every 10-12, cargo every 11-13
+// Prices /10 for testing
+const MODULES=[
+  // BATTERIES (13 items, lv 1,8,16,24,32,40,48,57,66,75,84,93 ≈7-10 lvl step)
+  {id:'b1', n:'БАТАРЕЯ-1',    sl:'en',ep:40,  eg:0, dr:0,inv:0,p:25,    lv:1,  sell:12,  d:'+40 EN'},
+  {id:'b2', n:'БАТАРЕЯ-2',    sl:'en',ep:70,  eg:0, dr:0,inv:0,p:80,    lv:8,  sell:40,  d:'+70 EN'},
+  {id:'b3', n:'БАТАРЕЯ-3',    sl:'en',ep:110, eg:0, dr:0,inv:0,p:220,   lv:16, sell:110, d:'+110 EN'},
+  {id:'b4', n:'БАТАРЕЯ-4',    sl:'en',ep:165, eg:0, dr:0,inv:0,p:550,   lv:24, sell:275, d:'+165 EN'},
+  {id:'b5', n:'БАТАРЕЯ-5',    sl:'en',ep:240, eg:0, dr:0,inv:0,p:1300,  lv:32, sell:650, d:'+240 EN'},
+  {id:'b6', n:'БАТАРЕЯ-6',    sl:'en',ep:340, eg:0, dr:0,inv:0,p:3000,  lv:40, sell:1500,d:'+340 EN'},
+  {id:'b7', n:'КОНД.МАТ.-1',  sl:'en',ep:480, eg:0, dr:0,inv:0,p:7000,  lv:48, sell:3500,d:'+480 EN'},
+  {id:'b8', n:'КОНД.МАТ.-2',  sl:'en',ep:680, eg:0, dr:0,inv:0,p:16000, lv:57, sell:8000,d:'+680 EN'},
+  {id:'b9', n:'УЛЬТРА-КОНД.', sl:'en',ep:960, eg:0, dr:0,inv:0,p:36000, lv:66, sell:18000,d:'+960 EN'},
+  {id:'b10',n:'МЕГА-КОНД.',   sl:'en',ep:1350,eg:0, dr:0,inv:0,p:80000, lv:75, sell:40000,d:'+1350 EN'},
+  {id:'b11',n:'КВАНТ.НАКОП.', sl:'en',ep:1900,eg:0, dr:0,inv:0,p:170000,lv:84, sell:85000,d:'+1900 EN'},
+  {id:'b12',n:'АРК-НАКОП.',   sl:'en',ep:2700,eg:0, dr:0,inv:0,p:370000,lv:93, sell:185000,d:'+2700 EN'},
+  // GENERATORS (11 items, lv 1,9,18,27,36,46,56,67,78,89 ≈8-11 step)
+  {id:'g1', n:'ГЕНЕРАТОР-1',  sl:'en',ep:0,eg:8,   dr:0,inv:0,p:30,    lv:1,  sell:15,  d:'+8 EN/с'},
+  {id:'g2', n:'ГЕНЕРАТОР-2',  sl:'en',ep:0,eg:16,  dr:0,inv:0,p:100,   lv:9,  sell:50,  d:'+16 EN/с'},
+  {id:'g3', n:'ГЕНЕРАТОР-3',  sl:'en',ep:0,eg:28,  dr:0,inv:0,p:300,   lv:18, sell:150, d:'+28 EN/с'},
+  {id:'g4', n:'ГЕНЕРАТОР-4',  sl:'en',ep:0,eg:44,  dr:0,inv:0,p:800,   lv:27, sell:400, d:'+44 EN/с'},
+  {id:'g5', n:'РЕАКТОР-1',    sl:'en',ep:0,eg:65,  dr:0,inv:0,p:2000,  lv:36, sell:1000,d:'+65 EN/с'},
+  {id:'g6', n:'РЕАКТОР-2',    sl:'en',ep:0,eg:95,  dr:0,inv:0,p:5000,  lv:46, sell:2500,d:'+95 EN/с'},
+  {id:'g7', n:'РЕАКТОР-3',    sl:'en',ep:0,eg:140, dr:0,inv:0,p:13000, lv:56, sell:6500,d:'+140 EN/с'},
+  {id:'g8', n:'ТЕРМОЯД.-1',   sl:'en',ep:0,eg:200, dr:0,inv:0,p:32000, lv:67, sell:16000,d:'+200 EN/с'},
+  {id:'g9', n:'ТЕРМОЯД.-2',   sl:'en',ep:0,eg:290, dr:0,inv:0,p:75000, lv:78, sell:37500,d:'+290 EN/с'},
+  {id:'g10',n:'АНТ.МАТ.ГЕН.', sl:'en',ep:0,eg:420, dr:0,inv:0,p:180000,lv:89, sell:90000,d:'+420 EN/с'},
+  // ARMOR/DR (9 items, lv 1,11,22,33,44,55,66,77,88 ≈10-12 step)
+  {id:'a1', n:'БРОНЯ-1',      sl:'ar',ep:0,eg:0,dr:.04,inv:0,p:35,    lv:1,  sell:17,  d:'-4% урона'},
+  {id:'a2', n:'БРОНЯ-2',      sl:'ar',ep:0,eg:0,dr:.08,inv:0,p:120,   lv:11, sell:60,  d:'-8% урона'},
+  {id:'a3', n:'БРОНЯ-3',      sl:'ar',ep:0,eg:0,dr:.13,inv:0,p:350,   lv:22, sell:175, d:'-13% урона'},
+  {id:'a4', n:'НАНОБРОНЬ-1',  sl:'ar',ep:0,eg:0,dr:.18,inv:0,p:1000,  lv:33, sell:500, d:'-18% урона'},
+  {id:'a5', n:'НАНОБРОНЬ-2',  sl:'ar',ep:0,eg:0,dr:.24,inv:0,p:3000,  lv:44, sell:1500,d:'-24% урона'},
+  {id:'a6', n:'АДАМАНТИН-1',  sl:'ar',ep:0,eg:0,dr:.30,inv:0,p:8000,  lv:55, sell:4000,d:'-30% урона'},
+  {id:'a7', n:'АДАМАНТИН-2',  sl:'ar',ep:0,eg:0,dr:.37,inv:0,p:22000, lv:66, sell:11000,d:'-37% урона'},
+  {id:'a8', n:'КВАНТ.ЩИТ-1',  sl:'ar',ep:0,eg:0,dr:.44,inv:0,p:60000, lv:77, sell:30000,d:'-44% урона'},
+  {id:'a9', n:'КВАНТ.ЩИТ-2',  sl:'ar',ep:0,eg:0,dr:.52,inv:0,p:160000,lv:88, sell:80000,d:'-52% урона'},
+  // CARGO (8 items, lv 1,12,24,36,48,60,72,84 ≈11-12 step)
+  {id:'c1', n:'ТРЮМ-1',       sl:'ar',ep:0,eg:0,dr:0,inv:5,  p:20,    lv:1,  sell:10,  d:'+5 ячеек'},
+  {id:'c2', n:'ТРЮМ-2',       sl:'ar',ep:0,eg:0,dr:0,inv:10, p:70,    lv:12, sell:35,  d:'+10 ячеек'},
+  {id:'c3', n:'ТРЮМ-3',       sl:'ar',ep:0,eg:0,dr:0,inv:18, p:220,   lv:24, sell:110, d:'+18 ячеек'},
+  {id:'c4', n:'СКЛАД МЕГА',   sl:'ar',ep:0,eg:0,dr:0,inv:30, p:650,   lv:36, sell:325, d:'+30 ячеек'},
+  {id:'c5', n:'СКЛАД ГИГА',   sl:'ar',ep:0,eg:0,dr:0,inv:48, p:2000,  lv:48, sell:1000,d:'+48 ячеек'},
+  {id:'c6', n:'СКЛАД ТЕРА',   sl:'ar',ep:0,eg:0,dr:0,inv:75, p:6000,  lv:60, sell:3000,d:'+75 ячеек'},
+  {id:'c7', n:'СКЛАД ПЕТА',   sl:'ar',ep:0,eg:0,dr:0,inv:110,p:18000, lv:72, sell:9000,d:'+110 ячеек'},
+  {id:'c8', n:'БЕСК. ТРЮМ',   sl:'ar',ep:0,eg:0,dr:0,inv:160,p:55000, lv:84, sell:27500,d:'+160 ячеек'},
+];
+ 
+const MECHS=[
+  {id:'scout',      n:'SCOUT-1',    bhp:150,  p:0,     lv:1,  sell:0,    d:'Лёгкий стартовый'},
+  {id:'viper',      n:'VIPER-2',    bhp:270,  p:250,   lv:10, sell:125,  d:'Скоростной'},
+  {id:'assault',    n:'ASSAULT-5',  bhp:450,  p:900,   lv:20, sell:450,  d:'Сбалансированный'},
+  {id:'titan',      n:'TITAN-9',    bhp:800,  p:2800,  lv:32, sell:1400, d:'Тяжёлая крепость'},
+  {id:'dread',      n:'DREAD-X',    bhp:1400, p:9000,  lv:45, sell:4500, d:'Линкор'},
+  {id:'colossus',   n:'COLOSSUS',   bhp:2400, p:28000, lv:58, sell:14000,d:'Великан'},
+  {id:'omega_m',    n:'OMEGA-X',    bhp:4200, p:85000, lv:72, sell:42500,d:'Легендарный'},
+  {id:'godmech',    n:'GOD-UNIT',   bhp:7500, p:250000,lv:88, sell:125000,d:'Воплощение мощи'},
+];
+ 
+// QUEST definitions per zone (repeatable infinitely)
+const QUESTS=[
+  // Zone 0 — City (lv 1-30)
+  {id:'q0_10', zone:0, name:'Чистильщик',   goal:'kill', cnt:10,  reward:{cr:300,  xp:800},   desc:'Убить 10 монстров'},
+  {id:'q0_30', zone:0, name:'Охотник',      goal:'kill', cnt:30,  reward:{cr:900,  xp:2500},  desc:'Убить 30 монстров'},
+  {id:'q0_50', zone:0, name:'Истребитель',  goal:'kill', cnt:50,  reward:{cr:1800, xp:5000},  desc:'Убить 50 монстров'},
+  {id:'q0_b',  zone:0, name:'Охота на Босса',goal:'boss',cnt:1,   reward:{cr:5000, xp:15000}, desc:'Убить Стража Города'},
+  // Zone 1 — Wastes (lv 30-70)
+  {id:'q1_10', zone:1, name:'Санитар',      goal:'kill', cnt:10,  reward:{cr:800,  xp:2000},  desc:'Убить 10 монстров'},
+  {id:'q1_30', zone:1, name:'Мясник',       goal:'kill', cnt:30,  reward:{cr:2500, xp:6500},  desc:'Убить 30 монстров'},
+  {id:'q1_50', zone:1, name:'Герой',        goal:'kill', cnt:50,  reward:{cr:5000, xp:13000}, desc:'Убить 50 монстров'},
+  {id:'q1_b',  zone:1, name:'Убить Титана', goal:'boss', cnt:1,   reward:{cr:15000,xp:45000}, desc:'Убить Пустынного Титана'},
+  // Zone 2 — Ruins (lv 70-110)
+  {id:'q2_10', zone:2, name:'Исследователь',goal:'kill', cnt:10,  reward:{cr:2500, xp:6000},  desc:'Убить 10 монстров'},
+  {id:'q2_30', zone:2, name:'Разрушитель',  goal:'kill', cnt:30,  reward:{cr:8000, xp:20000}, desc:'Убить 30 монстров'},
+  {id:'q2_50', zone:2, name:'Легенда',      goal:'kill', cnt:50,  reward:{cr:15000,xp:40000}, desc:'Убить 50 монстров'},
+  {id:'q2_b',  zone:2, name:'Конец Пустоты',goal:'boss', cnt:1,   reward:{cr:50000,xp:150000},desc:'Убить Пустотного Колосса'},
+];
+ 
+// ═══════════════════════════════════
+// STATE
+// ═══════════════════════════════════
+let G={
+  started:false,zone:0,
+  p:{wx:SPAWN_X,wy:SPAWN_Y,hp:100,maxHp:100,en:60,maxEn:60,enRegen:5,
+    lvl:1,xp:0,xpNext:120,cr:500,skillPts:0,
+    sk:{bal:0,enw:0,rkt:0,arm:0,crg:0,ens:0},
+    w:[null,null],enSl:[null,null,null,null],arSl:[null,null],
+    inv:[],invMax:8,mech:'scout',facing:0,walk:0},
+  mons:[],boss:null,turrets:[],projs:[],parts:[],npcs:[],portals:[],
+  jd:{x:0,y:0},ftimers:[0,0],
+  lastT:0,targets:[null,null],
+  time:0,spawnTimer:0,saveTimer:0,zone_entered:false,
+  autoBattle:false,
+  quest:null  // active quest: {def, progress, zone}
+};
+ 
+// ═══════════════════════════════════
+// STATS
+// ═══════════════════════════════════
+function calcStats(){
+  const p=G.p;
+  let hp=MECHS.find(m=>m.id===p.mech).bhp;
+  let en=60,er=5,inv=8,dr=0;
+  // armor slots: DR + cargo (no HP from armor anymore)
+  for(const s of p.arSl){
+    if(s){
+      const mod=MODULES.find(x=>x.id===s);
+      if(mod){dr+=mod.dr||0;inv+=mod.inv||0;}
     }
   }
-
-  // Очищаем старые чанки, ушедшие далеко за радиус обзора, разгружая ОЗУ и видеокарту
-  for (const [key, mesh] of chunksMap.entries()) {
-    if (!keepChunks.has(key)) {
-      scene.remove(mesh);
-      if (mesh.geometry) mesh.geometry.dispose();
-      if (mesh.material) mesh.material.dispose();
-      chunksMap.delete(key);
+  // energy slots
+  for(const s of p.enSl){
+    if(s){
+      const mod=MODULES.find(x=>x.id===s);
+      if(mod){en+=mod.ep||0;er+=mod.eg||0;}
+    }
+  }
+  // skills
+  hp=Math.round(hp*(1+p.sk.arm*.06));    // arm skill: +6% HP per level
+  en=Math.round(en*(1+p.sk.ens*.1));
+  er=Math.round(er*(1+p.sk.ens*.1)*10)/10;
+  inv+=p.sk.crg*3;
+  dr=Math.min(0.75, dr + p.sk.arm*0.01); // arm skill also adds 1% DR per level, cap 75%
+  p.maxHp=hp;p.maxEn=en;p.enRegen=er;p.invMax=inv;
+  p.dr=Math.round(dr*100)/100; // damage reduction 0..0.75
+  p.hp=Math.min(p.hp,hp);p.en=Math.min(p.en,en);
+  updFBtns();
+}
+function updFBtns(){
+  const WICONS={ballistic:'🔫',energy:'⚡',rocket:'🚀'};
+  for(let i=0;i<2;i++){
+    const btn=document.getElementById('wb'+(i+1));
+    const icn=document.getElementById('wi'+(i+1));
+    const nm=document.getElementById('wn'+(i+1));
+    const wid=G.p.w[i];
+    if(wid){
+      const w=WEAPONS.find(x=>x.id===wid);
+      btn.classList.remove('wempty');
+      icn.textContent=WICONS[w.t]||'🔫';
+      nm.textContent=w.n;
+      if(i===0){btn.className='wslot-btn ws1';}else{btn.className='wslot-btn ws2';}
+    }else{
+      btn.className='wslot-btn '+(i===0?'ws1':'ws2')+' wempty';
+      icn.textContent='⚫';nm.textContent='ПУСТО';
     }
   }
 }
-
+ 
 // ═══════════════════════════════════
-// PHYSICS & COLLISIONS ENGINE
+// GEN WORLD
 // ═══════════════════════════════════
-function checkCollision(nx, ny, rad = 0.35) {
-  // Физический обсчет четырех крайних точек окружности мехи/существа
-  const points = [
-    { x: nx - rad, y: ny - rad },
-    { x: nx + rad, y: ny - rad },
-    { x: nx - rad, y: ny + rad },
-    { x: nx + rad, y: ny + rad }
+function genWorld(){
+  CHUNKS.clear();
+  G.mons=[];G.boss=null;G.projs=[];G.parts=[];G.portals=[];G.spawnTimer=5;G.zone_entered=false;
+  document.getElementById('bbar').style.display='none';
+  // DOUBLED monster count
+  for(let i=0;i<1000+G.zone*300;i++)spawnMon(true);
+  placeBoss();
+  const mx=Math.floor(SZ_X+SZ_W/2),my=Math.floor(SZ_Y+SZ_H/2);
+  G.turrets=[
+    {wx:SZ_X-3,      wy:my,           shootT:0,range:6,dmg:80+G.zone*40},
+    {wx:SZ_X+SZ_W+2, wy:my,           shootT:0,range:6,dmg:80+G.zone*40},
+    {wx:mx,          wy:SZ_Y-3,       shootT:0,range:6,dmg:80+G.zone*40},
+    {wx:mx,          wy:SZ_Y+SZ_H+2,  shootT:0,range:6,dmg:80+G.zone*40}
   ];
-  for (const p of points) {
-    const type = getTileType(Math.floor(p.x), Math.floor(p.y));
-    if (type === 'wall' || type === 'fence' || type === 'rock' || type === 'water') {
-      return true; // Обнаружено твердое препятствие / непроходимая зона
-    }
+  G.npcs=[
+    {wx:SZ_X+4,  wy:SZ_Y+4,  name:'ТОРГОВЕЦ', col:'#40c020', type:'trader'},
+    {wx:SZ_X+11, wy:SZ_Y+4,  name:'МЕХАНИК',  col:'#40a0e0', type:'mechanic'},
+    {wx:SZ_X+8,  wy:SZ_Y+11, name:'КВЕСТОДАТЕЛЬ', col:'#e0a020', type:'questgiver'}
+  ];
+  if(G.zone<2){
+    G.portals.push({wx:WW-25,wy:WH/2,toZone:G.zone+1,col:ZONES[G.zone+1].acc,back:false});
+    G.portals.push({wx:WW/2,wy:WH-25,toZone:G.zone+1,col:ZONES[G.zone+1].acc,back:false});
   }
-  return false;
-}
-
-// ═══════════════════════════════════
-// ENTITY RENDERING & MANAGEMENT (3D ADAPTERS)
-// ═══════════════════════════════════
-function sync3DObjects() {
-  const currentEntities = new Set();
-
-  // 1. Синхронизация Монстров
-  G.monsters.forEach(m => {
-    const id = `mon_${m.id}`;
-    currentEntities.add(id);
-    let obj = loaded3DObjects.get(id);
-    if (!obj) {
-      const geo = m.isBoss ? GEOS.box : GEOS.cylinder;
-      const mat = m.isBoss ? MATS.boss : MATS.enemy;
-      obj = new THREE.Mesh(geo, mat);
-      if (m.isBoss) {
-        obj.scale.set(2.5, 3.5, 2.5);
-      } else {
-        obj.scale.set(1, 1.2, 1);
-      }
-      obj.castShadow = true;
-      scene.add(obj);
-      loaded3DObjects.set(id, obj);
-    }
-    obj.position.set(m.x * T_SIZE, m.isBoss ? 1.75 : 0.6, m.y * T_SIZE);
-  });
-
-  // 2. Синхронизация Выстрелов (Пуль)
-  G.bullets.forEach((b, index) => {
-    const id = `bullet_${index}_${b.tx}_${b.ty}`;
-    currentEntities.add(id);
-    let obj = loaded3DObjects.get(id);
-    if (!obj) {
-      obj = new THREE.Mesh(GEOS.sphere, MATS.bullet);
-      scene.add(obj);
-      loaded3DObjects.set(id, obj);
-    }
-    obj.position.set(b.x * T_SIZE, 0.8, b.y * T_SIZE);
-  });
-
-  // 3. Синхронизация Выпавшего Лута (Предметов)
-  G.items.forEach(it => {
-    const id = `item_${it.id}`;
-    currentEntities.add(id);
-    let obj = loaded3DObjects.get(id);
-    if (!obj) {
-      obj = new THREE.Mesh(GEOS.cone, MATS.item);
-      obj.rotation.x = Math.PI; // Переворачиваем конус, чтобы он стоял на вершине как кристалл
-      scene.add(obj);
-      loaded3DObjects.set(id, obj);
-    }
-    obj.position.set(it.x * T_SIZE, 0.4 + Math.sin(Date.now() * 0.005) * 0.1, it.y * T_SIZE); // Плавное парение предмета в воздухе
-    obj.rotation.y += 0.02; // Медленное вращение
-  });
-
-  // 4. Синхронизация Турелей Меха
-  G.turrets.forEach(tu => {
-    const id = `turret_${tu.id}`;
-    currentEntities.add(id);
-    let obj = loaded3DObjects.get(id);
-    if (!obj) {
-      obj = new THREE.Mesh(GEOS.box, MATS.turret);
-      obj.scale.set(0.6, 1.4, 0.6);
-      scene.add(obj);
-      loaded3DObjects.set(id, obj);
-    }
-    obj.position.set(tu.x * T_SIZE, 0.7, tu.y * T_SIZE);
-  });
-
-  // 5. Синхронизация Квестовых NPC (Q_GIVERS)
-  Q_GIVERS.forEach((qg, index) => {
-    const id = `qgiver_${index}`;
-    currentEntities.add(id);
-    let obj = loaded3DObjects.get(id);
-    if (!obj) {
-      obj = new THREE.Mesh(GEOS.cylinder, MATS.questgiver);
-      obj.scale.set(0.9, 1.3, 0.9);
-      scene.add(obj);
-      loaded3DObjects.set(id, obj);
-    }
-    obj.position.set(qg.x * T_SIZE, 0.65, qg.y * T_SIZE);
-    obj.rotation.y = Date.now() * 0.0005; // Легкое демонстрационное покачивание
-  });
-
-  // Автоматическая зачистка уничтоженных/подобранных сущностей из 3D-сцены
-  for (const [id, obj] of loaded3DObjects.entries()) {
-    if (!currentEntities.has(id)) {
-      scene.remove(obj);
-      loaded3DObjects.delete(id);
-    }
+  if(G.zone>0){
+    G.portals.push({wx:25,wy:WH/2,toZone:G.zone-1,col:ZONES[G.zone-1].acc,back:true});
+    G.portals.push({wx:SZ_X+SZ_W/2,wy:SZ_Y+SZ_H-3,toZone:G.zone-1,col:ZONES[G.zone-1].acc,back:true,inSZ:true});
   }
 }
-
+ 
+// Level ranges per zone: city 1-30, wastes 30-70, ruins 70-110
+// Distribution: near safe zone = low end, near boss corner (WW-50,WH-50) = high end
+const ZONE_LV=[[1,30],[30,70],[70,110]];
+ 
+function spawnMon(initial=false){
+  const z=ZONES[G.zone];
+  let wx,wy,tries=0;
+  do{wx=5+Math.random()*(WW-10);wy=5+Math.random()*(WH-10);tries++;}
+  while(tries<30&&(isBlocked(wx,wy)||inSafeZone(wx,wy)||(!initial&&Math.hypot(wx-G.p.wx,wy-G.p.wy)<30)));
+ 
+  // monster level based on distance from safe zone center toward boss corner
+  const safeCX=SZ_X+SZ_W/2,safeCY=SZ_Y+SZ_H/2;
+  const bossCX=WW-50,bossCY=WH-50;
+  const maxDist=Math.hypot(bossCX-safeCX,bossCY-safeCY);
+  const dist=Math.hypot(wx-safeCX,wy-safeCY);
+  const t01=Math.min(1,dist/maxDist);
+  const [lvMin,lvMax]=ZONE_LV[G.zone];
+  const monLv=Math.round(lvMin+(lvMax-lvMin)*t01);
+ 
+  const mt=z.mon[Math.floor(Math.random()*z.mon.length)];
+  const roll=Math.random();
+  const tier=roll<0.05?2:roll<0.15?1:0;
+  const tierMult=tier===2?10:tier===1?5:1;
+ 
+  // HP and atk scale with monster level
+  const hpBase=15+monLv*8;
+  const atkBase=2+monLv*1.5;
+  const xpBase=monLv*4;
+ 
+  G.mons.push({wx,wy,
+    hp:Math.round(hpBase*tierMult*(1+Math.random()*.3)),
+    maxHp:Math.round(hpBase*tierMult),
+    monLv, type:mt,
+    spd:.035+monLv*.0008+G.zone*.005,
+    xp:Math.round(xpBase*tierMult),
+    loot:z.loot[Math.floor(Math.random()*z.loot.length)],
+    lootMult:tierMult,tier,
+    atk:Math.round(atkBase*tierMult),
+    atkT:0,aggroed:false,aggroRange:10+tier*5,
+    facing:Math.random()*Math.PI*2,walk:Math.random()*Math.PI*2,
+    deathAnim:0,dead:false});
+}
+ 
+function placeBoss(){
+  const z=ZONES[G.zone];const lm=1+G.zone*.9+G.p.lvl*.15;
+  G.boss={wx:WW-50,wy:WH-50,hp:Math.round(500*50*lm),maxHp:Math.round(500*50*lm),
+    name:z.bossName,col:z.acc,spd:.07+G.zone*.02,
+    atk:Math.round((20+G.zone*10)*50),atkT:0,shootT:0,
+    loot:z.bossLoot||[],xp:500+G.zone*200,cr:1000+G.zone*500,
+    aggroed:false,facing:0,walk:0,dead:false};
+}
+ 
 // ═══════════════════════════════════
-// RE-SPAWNER & ENGINE STATE TRIGGERS
+// CAMERA & CANVAS
 // ═══════════════════════════════════
-function triggerSpawn() {
-  if (G.monsters.length >= 25) return; // Ограничиваем плотность врагов на сектор
-  const pX = Math.floor(G.p.wx);
-  const pY = Math.floor(G.p.wy);
-  
-  // Спавним монстров за экраном, но в радиусе активности
-  const rx = pX + (Math.random() > 0.5 ? 1 : -1) * (8 + Math.floor(Math.random() * 6));
-  const ry = pY + (Math.random() > 0.5 ? 1 : -1) * (8 + Math.floor(Math.random() * 6));
-
-  if (getTileType(rx, ry) === 'ground' && !checkCollision(rx, ry, 0.4)) {
-    const zoneInfo = ZONES[G.zone];
-    const name = zoneInfo.mon[Math.floor(Math.random() * zoneInfo.mon.length)];
-    const hp = 25 + G.zone * 40 + Math.floor(Math.random() * 20);
-    G.monsters.push({
-      id: Math.random().toString(36).substr(2, 9),
-      n: name, x: rx, y: ry, hp: hp, mhp: hp,
-      s: 1.5 + Math.random() * 0.8, isBoss: false
-    });
+const C=document.getElementById('gc'),ctx=C.getContext('2d');
+let camWx=SPAWN_X,camWy=SPAWN_Y;
+function updCam(){camWx+=(G.p.wx-camWx)*.12;camWy+=(G.p.wy-camWy)*.12;}
+function w2p(wx,wy){return{x:(wx-camWx)*PPT+C.width/2,y:(wy-camWy)*PPT+C.height/2};}
+ 
+// ═══════════════════════════════════
+// COLOR UTILS
+// ═══════════════════════════════════
+function lc(h,a){let r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return'#'+[r,g,b].map(v=>Math.min(255,v+a).toString(16).padStart(2,'0')).join('');}
+function dc(h,a){let r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return'#'+[r,g,b].map(v=>Math.max(0,v-a).toString(16).padStart(2,'0')).join('');}
+ 
+// ═══════════════════════════════════
+// TILE DRAW — rich textures
+// ═══════════════════════════════════
+function drawTile(tx,ty){
+  const{x,y}=w2p(tx,ty);const s=PPT;
+  if(x<-s*2||x>C.width+s*2||y<-s*2||y>C.height+s*2)return;
+  const type=getTile(tx,ty);
+  const z=ZONES[G.zone];
+  const time=G.time*.001;
+ 
+  if(type==='water'){
+    const wave=Math.sin(time*1.5+tx*.4+ty*.3);
+    const gw=ctx.createLinearGradient(x,y,x,y+s);
+    gw.addColorStop(0,lc(z.water,8));gw.addColorStop(1,dc(z.water,5));
+    ctx.fillStyle=gw;ctx.fillRect(x,y,s,s);
+    // ripples
+    ctx.strokeStyle='#ffffff14';ctx.lineWidth=1;
+    for(let i=0;i<2;i++){ctx.beginPath();ctx.arc(x+s*.3+i*s*.4,y+s*.5+wave*2,s*.12,0,Math.PI*2);ctx.stroke();}
+    ctx.fillStyle='#ffffff0c';ctx.fillRect(x+3,y+s*.4+wave*1.5,s-6,2);
+    return;
+  }
+ 
+  if(type==='fence'){
+    // FENCE — very visible
+    ctx.fillStyle=z.fence||'#807040';ctx.fillRect(x,y,s,s);
+    // 3D fence post effect
+    const fg=ctx.createLinearGradient(x,y,x+s,y+s);
+    fg.addColorStop(0,lc(z.fence||'#807040',30));
+    fg.addColorStop(.5,z.fence||'#807040');
+    fg.addColorStop(1,dc(z.fence||'#807040',30));
+    ctx.fillStyle=fg;ctx.fillRect(x,y,s,s);
+    // horizontal bars
+    ctx.fillStyle='#ffffff22';ctx.fillRect(x,y+2,s,4);ctx.fillRect(x,y+s-6,s,4);
+    ctx.fillStyle='#00000044';ctx.fillRect(x,y+s/2-2,s,4);
+    // posts
+    ctx.fillStyle='#00000044';ctx.fillRect(x,y,4,s);ctx.fillRect(x+s-4,y,4,s);
+    // top highlight
+    ctx.fillStyle='#ffffff33';ctx.fillRect(x,y,s,3);
+    return;
+  }
+ 
+  if(type==='safe'){
+    // Safe zone floor — bright green tiles
+    const sg=ctx.createLinearGradient(x,y,x+s,y+s);
+    sg.addColorStop(0,lc(z.safe||'#588038',18));
+    sg.addColorStop(.5,z.safe||'#588038');
+    sg.addColorStop(1,dc(z.safe||'#588038',12));
+    ctx.fillStyle=sg;ctx.fillRect(x,y,s,s);
+    // tile pattern
+    ctx.strokeStyle='#00000018';ctx.lineWidth=.5;ctx.strokeRect(x,y,s,s);
+    ctx.strokeStyle='#ffffff12';ctx.lineWidth=.5;
+    ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+s,y+s);ctx.stroke();
+    // grass tufts
+    ctx.fillStyle=lc(z.safe||'#588038',22)+'88';
+    if((tx*5+ty*7)%9===0){ctx.fillRect(x+4,y+s-8,3,5);ctx.fillRect(x+10,y+s-9,2,4);}
+    return;
+  }
+ 
+  // Base ground
+  const baseCol={ground:z.ground,road:z.road,wall:z.wall,rock:z.rock,grass:z.grass}[type]||z.ground;
+ 
+  if(type==='wall'){
+    // WALLS — very 3D look
+    const wg=ctx.createLinearGradient(x,y,x+s,y+s);
+    wg.addColorStop(0,lc(baseCol,35));
+    wg.addColorStop(.4,baseCol);
+    wg.addColorStop(1,dc(baseCol,40));
+    ctx.fillStyle=wg;ctx.fillRect(x,y,s,s);
+    // brick lines
+    ctx.strokeStyle='#00000033';ctx.lineWidth=1;
+    for(let r=0;r<4;r++){
+      ctx.beginPath();ctx.moveTo(x,y+r*s/4);ctx.lineTo(x+s,y+r*s/4);ctx.stroke();
+      const off=(r%2)*(s/4);
+      ctx.beginPath();ctx.moveTo(x+off,y+r*s/4);ctx.lineTo(x+off,y+(r+1)*s/4);ctx.stroke();
+    }
+    // strong highlight/shadow
+    ctx.fillStyle='#ffffff28';ctx.fillRect(x,y,s,4);ctx.fillRect(x,y,4,s);
+    ctx.fillStyle='#00000044';ctx.fillRect(x,y+s-4,s,4);ctx.fillRect(x+s-4,y,4,s);
+    return;
+  }
+ 
+  const tg=ctx.createLinearGradient(x,y,x+s,y+s);
+  tg.addColorStop(0,lc(baseCol,10));tg.addColorStop(.6,baseCol);tg.addColorStop(1,dc(baseCol,12));
+  ctx.fillStyle=tg;ctx.fillRect(x,y,s,s);
+ 
+  if(type==='ground'){
+    // Pebbles & dirt detail
+    if((tx*7+ty*11)%9===0){
+      ctx.fillStyle='#00000020';ctx.beginPath();ctx.ellipse(x+s*.35,y+s*.65,3.5,2.5,.4,0,Math.PI*2);ctx.fill();
+    }
+    if((tx*13+ty*5)%11===0){
+      ctx.fillStyle='#ffffff10';ctx.beginPath();ctx.ellipse(x+s*.7,y+s*.3,2,1.5,-.3,0,Math.PI*2);ctx.fill();
+    }
+    ctx.strokeStyle='#00000010';ctx.lineWidth=.3;ctx.strokeRect(x,y,s,s);
+  }
+ 
+  if(type==='grass'){
+    // Rich grass with blades
+    ctx.strokeStyle=lc(baseCol,28)+'cc';ctx.lineWidth=1.2;
+    for(let g=0;g<5;g++){
+      const gx=x+((tx*17+ty*13+g*37)%24)+3;
+      const gy=y+((tx*11+ty*19+g*23)%(s-10))+4;
+      ctx.beginPath();ctx.moveTo(gx,gy+5);ctx.quadraticCurveTo(gx+2,gy+1,gx+1,gy-5);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(gx+5,gy+4);ctx.quadraticCurveTo(gx+7,gy,gx+6,gy-4);ctx.stroke();
+    }
+    ctx.strokeStyle='#00000015';ctx.lineWidth=.4;ctx.strokeRect(x,y,s,s);
+  }
+ 
+  if(type==='road'){
+    // Road with lane markings
+    ctx.fillStyle='#ffffff0c';ctx.fillRect(x,y,s,3);ctx.fillRect(x,y+s-3,s,3);
+    if(((tx+ty)%3===0)){ctx.strokeStyle='#ffffff1a';ctx.lineWidth=2;ctx.setLineDash([4,5]);ctx.beginPath();ctx.moveTo(x+s*.5,y);ctx.lineTo(x+s*.5,y+s);ctx.stroke();ctx.setLineDash([]);}
+    ctx.strokeStyle='#00000014';ctx.lineWidth=.3;ctx.strokeRect(x,y,s,s);
+  }
+ 
+  if(type==='rock'){
+    // 3D rock
+    ctx.fillStyle='#00000033';ctx.beginPath();ctx.ellipse(x+s*.55,y+s*.7,s*.33,s*.13,0,0,Math.PI*2);ctx.fill();
+    const rg=ctx.createRadialGradient(x+s*.38,y+s*.33,1,x+s*.5,y+s*.46,s*.3);
+    rg.addColorStop(0,lc(baseCol,35));rg.addColorStop(.5,baseCol);rg.addColorStop(1,dc(baseCol,20));
+    ctx.fillStyle=rg;ctx.beginPath();ctx.ellipse(x+s*.5,y+s*.45,s*.28,s*.22,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#ffffff28';ctx.beginPath();ctx.ellipse(x+s*.36,y+s*.34,s*.1,s*.065,-.5,0,Math.PI*2);ctx.fill();
   }
 }
-
-function triggerBossSpawn() {
-  const zoneInfo = ZONES[G.zone];
-  const pX = Math.floor(G.p.wx) + 6;
-  const pY = Math.floor(G.p.wy) + 6;
-
-  if (!checkCollision(pX, pY, 1.2)) {
-    const bhp = 350 + G.zone * 600;
-    G.monsters.push({
-      id: 'boss_' + Date.now(),
-      n: zoneInfo.bossName, x: pX, y: pY, hp: bhp, mhp: bhp,
-      s: 1.1, isBoss: true
-    });
-    showNotif(`⚠️ ОБНАРУЖЕН СИГНАЛ БОССА: ${zoneInfo.bossName}!`, true);
+ 
+function drawWorld(){
+  ctx.fillStyle='#0a0a06';ctx.fillRect(0,0,C.width,C.height);
+  const cx=Math.floor(camWx),cy=Math.floor(camWy),r=VIEW_R;
+  for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
+    const tx=cx+dx,ty=cy+dy;
+    if(tx>=0&&ty>=0&&tx<WW&&ty<WH)drawTile(tx,ty);
+  }
+}
+ 
+// ═══════════════════════════════════
+// SPRITE UTILS
+// ═══════════════════════════════════
+function drawShadow(ctx,x,y,rx,ry){ctx.fillStyle='#00000055';ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill();}
+ 
+// ═══════════════════════════════════
+// PLAYER SPRITE
+// ═══════════════════════════════════
+const MECH_C={
+  scout:  {body:'#3d5030',leg:'#2d3a22',cpit:'#7ab8c8',acc:'#d4a030',glow:'#d4c040'},
+  viper:  {body:'#2e3848',leg:'#202830',cpit:'#90b8e8',acc:'#50a0d8',glow:'#60c0f0'},
+  assault:{body:'#4a3828',leg:'#3a2818',cpit:'#d0a060',acc:'#e07020',glow:'#f09040'},
+  titan:  {body:'#2a2828',leg:'#1c1818',cpit:'#e07878',acc:'#c03838',glow:'#ff5050'},
+  omegam: {body:'#181820',leg:'#101018',cpit:'#b890f0',acc:'#8050d0',glow:'#b080ff'}
+};
+function drawPlayerSprite(wx,wy,facing,walk,mechId){
+  const{x,y}=w2p(wx,wy);
+  const t=walk,bob=Math.abs(Math.sin(t*6))*2.5,leg=Math.sin(t*6)*5;
+  const col=MECH_C[mechId]||MECH_C.scout;
+  ctx.save();ctx.translate(x,y-18-bob);
+  drawShadow(ctx,0,18+bob,16,6);
+ 
+  // legs
+  for(let li=0;li<2;li++){
+    const loff=li===0?-1:1,yo=li===0?leg:-leg;
+    const lx=li===0?-12:3;
+    const lg=ctx.createLinearGradient(lx,4+yo,lx+9,18+yo);
+    lg.addColorStop(0,lc(col.leg,15));lg.addColorStop(1,dc(col.leg,15));
+    ctx.fillStyle=lg;ctx.fillRect(lx,4+yo,9,15);
+    ctx.fillStyle=dc(col.leg,20);ctx.fillRect(lx-2,17+yo,13,5);
+    // knee joint
+    const kg=ctx.createRadialGradient(lx+4,13+yo,1,lx+4,13+yo,5);
+    kg.addColorStop(0,lc(col.leg,25));kg.addColorStop(1,dc(col.leg,5));
+    ctx.fillStyle=kg;ctx.beginPath();ctx.arc(lx+4,13+yo,4,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=col.acc+'99';ctx.beginPath();ctx.arc(lx+4,13+yo,2,0,Math.PI*2);ctx.fill();
+  }
+ 
+  // torso
+  const tg=ctx.createLinearGradient(-13,-12,13,5);
+  tg.addColorStop(0,lc(col.body,20));tg.addColorStop(.5,col.body);tg.addColorStop(1,dc(col.body,18));
+  ctx.fillStyle=tg;ctx.beginPath();ctx.moveTo(-13,4);ctx.lineTo(13,4);ctx.lineTo(11,-12);ctx.lineTo(-11,-12);ctx.closePath();ctx.fill();
+  // side panels
+  ctx.fillStyle=dc(col.body,22);ctx.fillRect(-17,-1,6,13);ctx.fillRect(11,-1,6,13);
+  ctx.fillStyle=lc(col.body,28);ctx.fillRect(-9,-10,5,8);ctx.fillRect(4,-10,5,8);
+  // accent
+  ctx.fillStyle=col.acc;ctx.fillRect(-10,0,20,2);
+  ctx.shadowColor=col.glow;ctx.shadowBlur=4;ctx.fillRect(-10,0,20,2);ctx.shadowBlur=0;
+  // vents
+  ctx.fillStyle='#00000055';for(let v=0;v<3;v++)ctx.fillRect(-4+v*4,-9,2,6);
+ 
+  // shoulders
+  for(let si=0;si<2;si++){
+    const sx=si===0?-16:16;
+    const sg=ctx.createRadialGradient(sx,-7,1,sx,-7,10);
+    sg.addColorStop(0,lc(col.body,28));sg.addColorStop(1,dc(col.body,8));
+    ctx.fillStyle=sg;ctx.beginPath();ctx.arc(sx,-7,9,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=col.acc;ctx.shadowColor=col.glow;ctx.shadowBlur=8;
+    ctx.beginPath();ctx.arc(sx,-7,4,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+    ctx.fillStyle='#ffffff33';ctx.beginPath();ctx.arc(sx-1,-8.5,1.8,0,Math.PI*2);ctx.fill();
+  }
+  // weapon barrel
+  if(G.p.w[0]){
+    const bg=ctx.createLinearGradient(19,-11,35,-5);bg.addColorStop(0,'#4a4838');bg.addColorStop(1,'#282820');
+    ctx.fillStyle=bg;ctx.fillRect(19,-11,17,7);
+    ctx.fillStyle='#666658';ctx.fillRect(34,-10,7,5);
+    ctx.fillStyle='#ffffff22';ctx.fillRect(19,-11,17,2);
+  }
+ 
+  // neck
+  ctx.fillStyle=dc(col.body,28);ctx.fillRect(-4,-14,8,3);
+ 
+  // head
+  const hg=ctx.createLinearGradient(-9,-27,9,-13);
+  hg.addColorStop(0,lc(col.body,22));hg.addColorStop(1,dc(col.body,12));
+  ctx.fillStyle=hg;ctx.fillRect(-9,-27,18,14);
+  ctx.fillStyle=lc(col.body,25);ctx.fillRect(-9,-27,18,3);ctx.fillRect(-9,-27,3,14);
+  ctx.fillStyle=dc(col.body,22);ctx.fillRect(6,-27,3,14);ctx.fillRect(-9,-16,18,3);
+ 
+  // visor
+  const vg=ctx.createLinearGradient(-7,-24,7,-15);
+  vg.addColorStop(0,lc(col.cpit,25));vg.addColorStop(1,dc(col.cpit,20));
+  ctx.fillStyle=vg;ctx.shadowColor=col.glow;ctx.shadowBlur=12;
+  ctx.fillRect(-7,-24,14,8);ctx.shadowBlur=0;
+  ctx.fillStyle='#ffffff55';ctx.fillRect(-7,-24,6,3);
+  ctx.fillStyle='#00000022';for(let sl=0;sl<4;sl++)ctx.fillRect(-7,-23+sl*2,14,1);
+ 
+  // antenna
+  ctx.fillStyle=col.acc;ctx.fillRect(-1,-31,2,5);
+  ctx.shadowColor=col.glow;ctx.shadowBlur=10;
+  ctx.beginPath();ctx.arc(0,-31,3.5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  ctx.fillStyle='#ffffff55';ctx.beginPath();ctx.arc(-1,-32,1.2,0,Math.PI*2);ctx.fill();
+ 
+  ctx.restore();
+}
+ 
+// ═══════════════════════════════════
+// MONSTER SPRITES
+// ═══════════════════════════════════
+function drawMonsterSprite(m){
+  if(m.dead&&m.deathAnim>=1)return;
+  const{x,y}=w2p(m.wx,m.wy);
+  if(x<-110||x>C.width+110||y<-110||y>C.height+110)return;
+  const t=m.walk,bob=Math.abs(Math.sin(t*6))*1.5;
+  if(m.deathAnim>0)ctx.globalAlpha=Math.max(0,1-m.deathAnim*2);
+  ctx.save();ctx.translate(x,y-13-bob);
+  if(m.tier===1){ctx.shadowColor='#4488ff';ctx.shadowBlur=20;}
+  else if(m.tier===2){ctx.shadowColor='#ff2020';ctx.shadowBlur=24;}
+  const tp=m.type;
+ 
+  if(tp.includes('Бот')||tp.includes('Часовой')||tp.includes('Бронепехота')||tp.includes('Мех')){
+    const rc=tp.includes('Мех')?'#703090':tp.includes('Часовой')?'#405850':'#506038';
+    drawShadow(ctx,0,15,11,4);
+    const ls=Math.sin(t*6)*4;
+    for(let li=0;li<2;li++){const lx=li===0?-9:2,yo=li===0?ls:-ls;
+      const lg=ctx.createLinearGradient(lx,5+yo,lx+7,16+yo);lg.addColorStop(0,lc(rc,15));lg.addColorStop(1,dc(rc,15));
+      ctx.fillStyle=lg;ctx.fillRect(lx,5+yo,7,11);ctx.fillStyle=dc(rc,20);ctx.fillRect(lx-2,13+yo,9,4);}
+    const bg=ctx.createLinearGradient(-10,-4,10,9);bg.addColorStop(0,lc(rc,20));bg.addColorStop(1,dc(rc,10));
+    ctx.fillStyle=bg;ctx.fillRect(-10,-4,20,12);
+    ctx.fillStyle=lc(rc,25);ctx.fillRect(-8,-2,6,8);ctx.fillRect(2,-2,6,8);
+    const ec=tp.includes('Мех')?'#dd00ff':'#ff3030';
+    const eg=ctx.createRadialGradient(0,-1,0,0,-1,5);eg.addColorStop(0,'#ffffff');eg.addColorStop(.3,ec);eg.addColorStop(1,ec+'00');
+    ctx.fillStyle=eg;ctx.shadowColor=ec;ctx.shadowBlur=12;ctx.beginPath();ctx.arc(0,-1,4,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+    ctx.strokeStyle=lc(rc,30);ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(-5,-4);ctx.lineTo(-7,-15);ctx.stroke();ctx.beginPath();ctx.moveTo(5,-4);ctx.lineTo(7,-15);ctx.stroke();
+    ctx.fillStyle=ec+'cc';ctx.beginPath();ctx.arc(-7,-15,2.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(7,-15,2.5,0,Math.PI*2);ctx.fill();
+ 
+  }else if(tp.includes('Скорп')||tp.includes('Краб')){
+    const sc=tp.includes('Краб')?'#b06020':'#904a18';
+    drawShadow(ctx,0,10,16,5);
+    const sbg=ctx.createRadialGradient(0,-1,2,0,0,15);sbg.addColorStop(0,lc(sc,25));sbg.addColorStop(1,dc(sc,5));
+    ctx.fillStyle=sbg;ctx.beginPath();ctx.ellipse(0,0,13,9,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=lc(sc,22);ctx.beginPath();ctx.ellipse(0,-2,9,6,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#ffffff22';ctx.beginPath();ctx.ellipse(-3,-4,4,2,-.3,0,Math.PI*2);ctx.fill();
+    const ca=Math.sin(t*5)*.35;
+    ctx.fillStyle=dc(sc,10);
+    ctx.save();ctx.translate(-15,2);ctx.rotate(-ca-.2);ctx.fillRect(0,-3,14,5);ctx.restore();
+    ctx.save();ctx.translate(15,2);ctx.rotate(ca+.2);ctx.fillRect(-14,-3,14,5);ctx.restore();
+    if(tp.includes('Скорп')){
+      const stg=ctx.createLinearGradient(0,8,14,-18);stg.addColorStop(0,sc);stg.addColorStop(1,dc(sc,20));
+      ctx.strokeStyle=sc;ctx.lineWidth=5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(0,8);ctx.quadraticCurveTo(18,2,14,-18);ctx.stroke();
+      ctx.fillStyle='#ff5030';ctx.shadowColor='#ff5030';ctx.shadowBlur=10;ctx.beginPath();ctx.arc(14,-18,5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+      ctx.fillStyle='#ffffff55';ctx.beginPath();ctx.arc(12,-19,2,0,Math.PI*2);ctx.fill();
+    }
+    ctx.fillStyle='#ff1a1a';ctx.beginPath();ctx.arc(-4,-3,3.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(4,-3,3.5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#ffffff66';ctx.beginPath();ctx.arc(-5,-4,1.3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(3,-4,1.3,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle=dc(sc,18);ctx.lineWidth=2;
+    for(let li=0;li<3;li++){const la=Math.sin(t*6+li)*.4;ctx.save();ctx.translate(-10+li*3,5);ctx.rotate(la);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-9,9);ctx.stroke();ctx.restore();ctx.save();ctx.translate(10-li*3,5);ctx.rotate(-la);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(9,9);ctx.stroke();ctx.restore();}
+ 
+  }else if(tp.includes('Волк')||tp.includes('Пёс')){
+    const wc='#7a5c3a';
+    drawShadow(ctx,0,12,13,5);
+    ctx.fillStyle=wc;ctx.beginPath();ctx.ellipse(0,3,9,6,0,0,Math.PI*2);ctx.fill();
+    const hbg=ctx.createRadialGradient(-9,0,1,-9,0,9);hbg.addColorStop(0,lc(wc,18));hbg.addColorStop(1,wc);
+    ctx.fillStyle=hbg;ctx.beginPath();ctx.arc(-9,0,8,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#c8a878';ctx.beginPath();ctx.ellipse(-17,2,5,4,-.3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#ff3030';ctx.beginPath();ctx.moveTo(-20,4);ctx.lineTo(-14,4);ctx.lineTo(-16,8);ctx.closePath();ctx.fill();
+    ctx.fillStyle=dc(wc,12);
+    ctx.beginPath();ctx.moveTo(-11,-7);ctx.lineTo(-7,-18);ctx.lineTo(-3,-7);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(-17,-5);ctx.lineTo(-14,-14);ctx.lineTo(-10,-5);ctx.closePath();ctx.fill();
+    const eg=ctx.createRadialGradient(-11,-1,0,-11,-1,4);eg.addColorStop(0,'#ffee00');eg.addColorStop(1,'#c08000');
+    ctx.fillStyle=eg;ctx.beginPath();ctx.arc(-11,-1,3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#200800';ctx.beginPath();ctx.arc(-10.5,-1,1.4,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#ffffff66';ctx.beginPath();ctx.arc(-12.5,-2,1,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle=lc(wc,8);ctx.lineWidth=4.5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(9,0);ctx.quadraticCurveTo(18,-4,15,-14);ctx.stroke();
+    const ll=Math.sin(t*7)*4;ctx.fillStyle=dc(wc,15);
+    ctx.fillRect(-5,7,5,9+ll);ctx.fillRect(1,7,5,9-ll);ctx.fillRect(-6,14+ll,7,3);ctx.fillRect(0,14-ll,7,3);
+ 
+  }else if(tp.includes('Страж')){
+    const gc='#3a5030';
+    drawShadow(ctx,0,17,16,6);
+    const lv=Math.sin(t*5)*5;
+    for(let li=0;li<2;li++){const lx=li===0?-11:2,yo=li===0?lv:-lv;ctx.fillStyle=dc(gc,20);ctx.fillRect(lx,8+yo,9,17);ctx.fillRect(lx-2,21+yo,11,5);}
+    const tg=ctx.createLinearGradient(-13,-4,13,12);tg.addColorStop(0,lc(gc,22));tg.addColorStop(1,dc(gc,12));
+    ctx.fillStyle=tg;ctx.fillRect(-13,-4,26,14);
+    const acc=ZONES[G.zone].acc;
+    for(let si=0;si<2;si++){const sx=si===0?-15:15;ctx.fillStyle=dc(gc,8);ctx.beginPath();ctx.arc(sx,-1,9,0,Math.PI*2);ctx.fill();ctx.fillStyle=acc;ctx.shadowColor=acc;ctx.shadowBlur=10;ctx.beginPath();ctx.arc(sx,-1,4.5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#ffffff44';ctx.beginPath();ctx.arc(sx-1,-2,1.8,0,Math.PI*2);ctx.fill();}
+    ctx.fillStyle=tg;ctx.fillRect(-9,-21,18,18);
+    ctx.fillStyle=lc(gc,22);ctx.fillRect(-9,-21,18,3);ctx.fillRect(-9,-21,3,18);
+    ctx.fillStyle='#00c888';ctx.shadowColor='#00c888';ctx.shadowBlur=12;ctx.fillRect(-6,-18,12,8);ctx.shadowBlur=0;
+    ctx.fillStyle='#ffffff55';ctx.fillRect(-5,-17,5,3);
+ 
+  }else{
+    const gc=tp.includes('Призрак')||tp.includes('Теневик')?'#304050':'#5a4028';
+    if(tp.includes('Призрак'))ctx.globalAlpha*=.72;
+    drawShadow(ctx,0,12,9,3);
+    const bg=ctx.createLinearGradient(-8,-2,8,10);bg.addColorStop(0,lc(gc,18));bg.addColorStop(1,gc);
+    ctx.fillStyle=bg;ctx.fillRect(-8,-2,16,12);ctx.fillStyle=lc(gc,22);ctx.fillRect(-6,0,5,7);
+    const lv2=Math.sin(t*7)*4;ctx.fillStyle=dc(gc,18);ctx.fillRect(-7,7,6,9+lv2);ctx.fillRect(1,7,6,9-lv2);ctx.fillRect(-8,14+lv2,8,3);ctx.fillRect(0,14-lv2,8,3);
+    const hbg=ctx.createRadialGradient(0,-8,1,0,-8,9);hbg.addColorStop(0,lc(gc,20));hbg.addColorStop(1,gc);
+    ctx.fillStyle=hbg;ctx.beginPath();ctx.arc(0,-8,8,0,Math.PI*2);ctx.fill();
+    const ec=tp.includes('Призрак')?'#00aaff':tp.includes('Теневик')?'#aa00ff':'#ff8800';
+    ctx.fillStyle=ec;ctx.shadowColor=ec;ctx.shadowBlur=12;
+    ctx.beginPath();ctx.arc(-3,-8,2.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(3,-8,2.5,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;ctx.fillStyle='#ffffff66';ctx.beginPath();ctx.arc(-4,-9,1,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(2,-9,1,0,Math.PI*2);ctx.fill();
+  }
+  ctx.shadowBlur=0;
+ 
+  // HP bar — rounded pill style
+  const hr=m.hp/m.maxHp,bw=26+m.tier*6,bx=-bw/2;
+  ctx.fillStyle='#00000066';ctx.beginPath();ctx.roundRect(bx,-35,bw,6,3);ctx.fill();
+  const hcol=m.tier===2?'#ff3030':m.tier===1?'#4488ff':hr>.5?'#50c020':'#e04020';
+  ctx.fillStyle=hcol;ctx.shadowColor=hcol;ctx.shadowBlur=4;
+  ctx.beginPath();ctx.roundRect(bx,-35,bw*hr,6,3);ctx.fill();ctx.shadowBlur=0;
+  if(m.tier>0){ctx.fillStyle=m.tier===2?'#ff5050':'#5090ff';ctx.font='bold 8px Courier New';ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(m.tier===2?'★ELITE':'◆CHAMP',0,-37);}
+  if(m.aggroed){ctx.fillStyle='#ff3030';ctx.font='bold 11px sans-serif';ctx.fillText('!',0,-41);}
+  ctx.restore();ctx.globalAlpha=1;
+}
+ 
+// ═══════════════════════════════════
+// BOSS SPRITE
+// ═══════════════════════════════════
+function drawBossSprite(){
+  const b=G.boss;if(!b||b.dead)return;
+  const{x,y}=w2p(b.wx,b.wy);
+  if(x<-160||x>C.width+160||y<-160||y>C.height+160)return;
+  const pulse=.88+Math.sin(G.time*.003)*.12,t=G.time*.001;
+  ctx.save();ctx.translate(x,y-42);
+  ctx.fillStyle=b.col+'18';ctx.beginPath();ctx.arc(0,32,66*pulse,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=b.col+'10';ctx.beginPath();ctx.arc(0,32,50*pulse,0,Math.PI*2);ctx.fill();
+  drawShadow(ctx,0,34,42,17);
+  const lg=Math.sin(t*3)*7;
+  for(let li=0;li<2;li++){const lx=li===0?-23:5,yo=li===0?lg:-lg;ctx.fillStyle='#2a2020';ctx.fillRect(lx,18+yo,18,27);ctx.fillRect(lx-4,41+yo,22,8);}
+  const tbg=ctx.createLinearGradient(-26,-6,26,24);tbg.addColorStop(0,'#4a3030');tbg.addColorStop(1,'#2a1a1a');
+  ctx.fillStyle=tbg;ctx.fillRect(-26,-6,52,28);
+  ctx.fillStyle=b.col+'55';ctx.fillRect(-22,-4,20,24);ctx.fillRect(2,-4,20,24);
+  const cg=ctx.createRadialGradient(0,8,2,0,8,15);cg.addColorStop(0,lc(b.col,60));cg.addColorStop(.5,b.col);cg.addColorStop(1,dc(b.col,30));
+  ctx.fillStyle=cg;ctx.shadowColor=b.col;ctx.shadowBlur=22;ctx.beginPath();ctx.arc(0,8,14,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  ctx.fillStyle='#ffffff55';ctx.beginPath();ctx.arc(-4,4,5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#1a1818';ctx.fillRect(-42,-15,16,13);ctx.fillRect(26,-15,16,13);
+  ctx.fillStyle='#3a2c2c';ctx.fillRect(-52,-13,12,9);ctx.fillRect(40,-13,12,9);
+  ctx.fillStyle=b.col;ctx.shadowColor=b.col;ctx.shadowBlur=14;
+  ctx.beginPath();ctx.arc(-49,-9,5.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(49,-9,5.5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  ctx.fillStyle='#ffffff55';ctx.beginPath();ctx.arc(-51,-11,2.2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(47,-11,2.2,0,Math.PI*2);ctx.fill();
+  const hbg2=ctx.createLinearGradient(-20,-36,20,-4);hbg2.addColorStop(0,'#3a2828');hbg2.addColorStop(1,'#1a1010');
+  ctx.fillStyle=hbg2;ctx.fillRect(-20,-36,40,32);
+  ctx.fillStyle=b.col;ctx.shadowColor=b.col;ctx.shadowBlur=18;ctx.fillRect(-16,-25,32,10);ctx.shadowBlur=0;
+  ctx.fillStyle='#ffffff66';ctx.fillRect(-16,-25,14,4);
+  ctx.strokeStyle='#3a2c2c';ctx.lineWidth=5;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(-14,-34);ctx.lineTo(-18,-52);ctx.stroke();ctx.beginPath();ctx.moveTo(14,-34);ctx.lineTo(18,-52);ctx.stroke();
+  ctx.fillStyle=b.col;ctx.shadowColor=b.col;ctx.shadowBlur=8;ctx.beginPath();ctx.arc(-18,-52,4.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(18,-52,4.5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  ctx.fillStyle='#ffffff22';ctx.font='bold 20px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('☠',0,-10);
+  if(!b.aggroed){ctx.fillStyle='#ffffff88';ctx.font='9px Courier New';ctx.textBaseline='bottom';ctx.fillText('Zzz...',0,-60);}
+  ctx.restore();
+  // boss bar
+  const hw=Math.min(C.width-40,280),hx=(C.width-hw)/2;
+  ctx.fillStyle='#2a1010';ctx.beginPath();ctx.roundRect(hx,C.height-46,hw,12,5);ctx.fill();
+  const hr=b.hp/b.maxHp;
+  const bg2=ctx.createLinearGradient(hx,0,hx+hw,0);bg2.addColorStop(0,'#880000');bg2.addColorStop(.5,b.col);bg2.addColorStop(1,'#ff5020');
+  ctx.fillStyle=bg2;ctx.beginPath();ctx.roundRect(hx,C.height-46,hw*hr,12,5);ctx.fill();
+  document.getElementById('bbn').textContent=b.name;
+  document.getElementById('bbf').style.width=(hr*100)+'%';
+  document.getElementById('bht').textContent=Math.ceil(b.hp)+'/'+b.maxHp;
+}
+ 
+// ═══════════════════════════════════
+// NPC SPRITE
+// ═══════════════════════════════════
+function drawNPCSprite(n){
+  const{x,y}=w2p(n.wx,n.wy);const t=G.time*.001;
+  const isQuestgiver=n.type==='questgiver';
+  const isMechanic=n.type==='mechanic';
+  if(isQuestgiver){
+    // Draw quest NPC separately
+    ctx.save();ctx.translate(x,y-14);
+    drawShadow(ctx,0,10,9,3);
+    ctx.fillStyle='#4a3818';ctx.fillRect(-5,5,5,11);ctx.fillRect(1,5,5,11);ctx.fillRect(-7,13,7,3);ctx.fillRect(0,13,7,3);
+    const qbg=ctx.createLinearGradient(-9,-4,9,9);qbg.addColorStop(0,'#c08020');qbg.addColorStop(1,'#805010');
+    ctx.fillStyle=qbg;ctx.fillRect(-9,-4,18,11);
+    const qfg=ctx.createRadialGradient(-1,-9,2,-1,-9,9);qfg.addColorStop(0,'#d4b070');qfg.addColorStop(1,'#b08050');
+    ctx.fillStyle=qfg;ctx.beginPath();ctx.arc(0,-10,8,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#3a2808';ctx.fillRect(-8,-17,16,7);ctx.fillRect(-10,-17,20,3);
+    // exclamation mark
+    const hasQuest=!G.quest||G.quest.zone!==G.zone;
+    const questDone=G.quest&&G.quest.done&&G.quest.zone===G.zone;
+    ctx.fillStyle=questDone?'#40e040':'#e0c020';ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=12;
+    ctx.font='bold 14px serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(questDone?'!':'?',0,-1);ctx.shadowBlur=0;
+    // pulsing ring
+    const pr2=Math.abs(Math.sin(G.time*.003))*4;
+    ctx.strokeStyle=questDone?'#40e04099':'#e0c02099';ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(0,-10,10+pr2,0,Math.PI*2);ctx.stroke();
+    const dist2=Math.hypot(G.p.wx-n.wx,G.p.wy-n.wy);
+    if(dist2<15){
+      const yo=Math.sin(G.time*.001*2)*3;
+      ctx.fillStyle='#e0c020';ctx.font='bold 7px Courier New';ctx.textBaseline='bottom';
+      ctx.fillText(questDone?'[ СДАТЬ! ]':'[ КВЕСТЫ ]',0,-26+yo);
+    }
+    ctx.restore();
+    return;
+  }
+  ctx.save();ctx.translate(x,y-14);
+  drawShadow(ctx,0,10,9,3);
+  // legs
+  ctx.fillStyle='#4a3818';ctx.fillRect(-5,5,5,11);ctx.fillRect(1,5,5,11);ctx.fillRect(-7,13,7,3);ctx.fillRect(0,13,7,3);
+  // body — mechanic is blue/grey, trader is green
+  const bodyCol=isMechanic?['#4060a0','#304878']:['#60803a','#405828'];
+  const cg=ctx.createLinearGradient(-9,-4,9,9);cg.addColorStop(0,bodyCol[0]);cg.addColorStop(1,bodyCol[1]);
+  ctx.fillStyle=cg;ctx.fillRect(-9,-4,18,11);ctx.fillStyle=bodyCol[1];ctx.fillRect(-9,-4,5,11);
+  // head
+  const fg=ctx.createRadialGradient(-1,-9,2,-1,-9,9);fg.addColorStop(0,'#d4a870');fg.addColorStop(1,'#b08050');
+  ctx.fillStyle=fg;ctx.beginPath();ctx.arc(0,-10,8,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#ffffff22';ctx.beginPath();ctx.arc(-2,-12,3,0,Math.PI*2);ctx.fill();
+  // hat/helmet
+  if(isMechanic){
+    ctx.fillStyle='#506070';ctx.fillRect(-7,-17,14,6);ctx.fillRect(-9,-17,18,3);
+    ctx.fillStyle='#40c0e0';ctx.beginPath();ctx.arc(4,-14,3,0,Math.PI*2);ctx.fill(); // goggles
   } else {
-    // Если точка занята препятствием, пробуем сместить
-    G.monsters.push({
-      id: 'boss_' + Date.now(),
-      n: zoneInfo.bossName, x: G.p.wx - 5, y: G.p.wy - 5, hp: 350 + G.zone * 600, mhp: 350 + G.zone * 600,
-      s: 1.1, isBoss: true
-    });
-    showNotif(`⚠️ ОБНАРУЖЕН СИГНАЛ БОССА: ${zoneInfo.bossName}!`, true);
+    ctx.fillStyle='#3a2808';ctx.fillRect(-8,-17,16,7);ctx.fillRect(-10,-17,20,3);
   }
+  // icon
+  const iconCol=isMechanic?'#40c0e0':'#d4c030';
+  ctx.fillStyle=iconCol;ctx.shadowColor=iconCol;ctx.shadowBlur=12;
+  ctx.font='bold 12px Courier New';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(isMechanic?'🔧':'$',0,-1);ctx.shadowBlur=0;
+  // proximity label
+  const d=Math.hypot(G.p.wx-n.wx,G.p.wy-n.wy);
+  if(d<15){
+    const yo=Math.sin(t*2)*3;
+    ctx.fillStyle=isMechanic?'#40c0e0':'#60c020';ctx.font='bold 7px Courier New';ctx.textBaseline='bottom';
+    ctx.fillText(isMechanic?'[ РЕМОНТ ]':'[ SHOP ]',0,-26+yo);
+    // show repair cost if mechanic
+    if(isMechanic&&G.p.hp<G.p.maxHp){
+      const cost=repairCost();ctx.fillText(cost+' CR',0,-35+yo);
+    }
+  }
+  ctx.restore();
 }
- // ═══════════════════════════════════
-// GAME MECHANICS & COMBAT ENGINE
+ 
+function repairCost(){
+  const p=G.p;const missing=p.maxHp-p.hp;
+  return Math.max(10,Math.round(missing*0.0005*(1+G.zone*0.3)));
+}
+ 
 // ═══════════════════════════════════
-function fireWeapon(wId, isSecond) {
-  const w = WEAPONS[wId];
-  if (!w) return;
-  
-  // Рассчитываем затраты энергии с учетом пассивных навыков/дронов
-  let cost = w.e;
-  if (G.p.slots.se === 'd2') cost *= 0.88; // Дрон-генератор снижает затраты
-
-  if (G.p.en < cost) return;
-  G.p.en -= cost;
-
-  // Ищем ближайшего врага в радиусе поражения орудия
-  let rMax = w.r;
-  if (G.p.slots.sa === 'a3') rMax += 1.5; // Оптика Квант
-
-  let target = null;
-  let minDist = rMax;
-
-  G.monsters.forEach(m => {
-    const d = Math.hypot(m.x - G.p.wx, m.y - G.p.wy);
-    if (d < minDist) {
-      minDist = d;
-      target = m;
-    }
-  });
-
-  if (!target) return;
-
-  // Рассчитываем урон
-  let dmg = w.d;
-  if (G.p.sk_dmg) dmg *= (1 + G.p.sk_dmg);
-  if (G.p.slots.se === 'd4') dmg *= 1.08;
-  if (G.p.slots.se === 'd6') dmg *= 1.18;
-
-  // Направление полета пули
-  const dx = target.x - G.p.wx;
-  const dy = target.y - G.p.wy;
-  const dist = Math.hypot(dx, dy);
-
-  G.bullets.push({
-    x: G.p.wx, y: G.p.wy,
-    vx: (dx / dist) * 12, vy: (dy / dist) * 12, // Скорость полета пули
-    dmg: dmg, tx: target.x, ty: target.y, t: w.t
-  });
-
-  psh(w.t); // Воспроизведение звука выстрела через Web Audio API
-}
-
-function damagePlayer(amt) {
-  G.p.hp -= amt;
-  if (G.p.hp <= 0) {
-    G.p.hp = 0;
-    showNotif("🚨 ВАШ МЕХ УНИЧТОЖЕН! Респавн на базе...", true);
-    G.p.wx = SPAWN_X;
-    G.p.wy = SPAWN_Y;
-    G.p.hp = G.p.mhp;
-    G.p.en = G.p.men;
-    G.p.cr = Math.max(0, G.p.cr - 150); // Штраф за уничтожение
-    saveGame();
-  }
-}
-
+// TURRET SPRITE
 // ═══════════════════════════════════
-// UI CORE RENDERERS (DOM UPDATER)
+function drawTurretSprite(tr){
+  const{x,y}=w2p(tr.wx,tr.wy);
+  ctx.save();ctx.translate(x,y-10);
+  drawShadow(ctx,0,8,12,5);
+  // base
+  const bg=ctx.createRadialGradient(0,0,2,0,0,12);bg.addColorStop(0,'#606858');bg.addColorStop(1,'#303828');
+  ctx.fillStyle=bg;ctx.beginPath();ctx.arc(0,0,12,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#808870';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle='#ffffff1a';ctx.beginPath();ctx.arc(-4,-4,4,0,Math.PI*2);ctx.fill();
+  // barrel pointing toward last target
+  ctx.fillStyle='#808870';ctx.fillRect(-3,-14,6,14);
+  ctx.fillStyle='#a0a888';ctx.fillRect(-2,-14,2,12);
+  ctx.fillStyle='#40c040';ctx.shadowColor='#40c040';ctx.shadowBlur=8;
+  ctx.beginPath();ctx.arc(0,0,3,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  ctx.restore();
+}
+ 
 // ═══════════════════════════════════
-function showNotif(txt, isAlert = false) {
-  const n = document.getElementById('notif');
-  n.innerText = txt;
-  n.style.background = isAlert ? 'rgba(150,20,20,0.9)' : 'rgba(30,40,20,0.9)';
-  n.style.borderColor = isAlert ? '#ff3333' : '#a0b040';
-  n.classList.add('show');
-  setTimeout(() => n.classList.remove('show'), 3000);
-}
-
-function updateHUD() {
-  document.getElementById('v_lvl').innerText = G.p.lvl;
-  document.getElementById('v_cr').innerText = G.p.cr;
-  document.getElementById('v_hp').innerText = Math.ceil(G.p.hp);
-  document.getElementById('v_mhp').innerText = G.p.mhp;
-  document.getElementById('v_en').innerText = Math.ceil(G.p.en);
-  document.getElementById('v_men').innerText = G.p.men;
-  
-  const hPct = Math.min(100, Math.max(0, (G.p.hp / G.p.mhp) * 100));
-  document.getElementById('p_hp').style.width = `${hPct}%`;
-  
-  const ePct = Math.min(100, Math.max(0, (G.p.en / G.p.men) * 100));
-  document.getElementById('p_en').style.width = `${ePct}%`;
-
-  const reqXp = G.p.lvl * 250;
-  const xPct = Math.min(100, (G.p.xp / reqXp) * 100);
-  document.getElementById('p_xp').style.width = `${xPct}%`;
-
-  const zn = ZONES[G.zone];
-  const zBtn = document.getElementById('b_zone');
-  zBtn.innerText = zn.name;
-  zBtn.style.color = zn.acc;
-  
-  // Проверяем нахождение в безопасной зоне
-  const inSafe = (G.p.wx >= SZ_X && G.p.wx < SZ_X + SZ_W && G.p.wy >= SZ_Y && G.p.wy < SZ_Y + SZ_H);
-  const locText = document.getElementById('v_loc');
-  if (inSafe) {
-    locText.innerText = "АВАНПОСТ";
-    locText.style.color = "#55ff55";
-  } else {
-    locText.innerText = "ДИКИЙ СЕКТОР";
-    locText.style.color = "#ff5555";
-  }
-}
-
-function renderPanel() {
-  const cnt = document.getElementById('p_content');
-  cnt.innerHTML = '';
-
-  if (activeTab === 'inv') {
-    // 🧳 ИНВЕНТАРЬ И СЛОТЫ ЭКИПИРОВКИ
-    let h = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-      <div class="card">
-        <div style="color:#8a9040;font-size:9px;margin-bottom:4px;">АКТИВНОЕ ОРУЖИЕ 1</div>
-        <div style="font-size:12px;font-weight:bold;color:#fff;">${WEAPONS[G.p.w1]?.n || 'ПУСТО'}</div>
-      </div>
-      <div class="card" onclick="unequipW2()" style="cursor:pointer;">
-        <div style="color:#8a9040;font-size:9px;margin-bottom:4px;">АКТИВНОЕ ОРУЖИЕ 2 (ТАП - СНЯТЬ)</div>
-        <div style="font-size:12px;font-weight:bold;color:#fff;">${G.p.w2 ? WEAPONS[G.p.w2].n : 'НЕТ'}</div>
-      </div>
-    </div>`;
-
-    h += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px;">
-      <div class="card" onclick="unequipSlot('sw')" style="cursor:pointer;text-align:center;">
-        <div style="font-size:7px;color:#8a9040;">ДРОН ЗАЩИТЫ</div>
-        <div style="font-size:11px;color:#0ff;font-weight:bold;">${G.p.slots.sw ? DRONES[G.p.slots.sw].n.split('-')[1] : '❌'}</div>
-      </div>
-      <div class="card" onclick="unequipSlot('se')" style="cursor:pointer;text-align:center;">
-        <div style="font-size:7px;color:#8a9040;">ДРОН СУППОРТ</div>
-        <div style="font-size:11px;color:#ff0;font-weight:bold;">${G.p.slots.se ? DRONES[G.p.slots.se].n.split('-')[1] : '❌'}</div>
-      </div>
-      <div class="card" onclick="unequipSlot('sa')" style="cursor:pointer;text-align:center;">
-        <div style="font-size:7px;color:#8a9040;">AUX МОДУЛЬ</div>
-        <div style="font-size:11px;color:#f0f;font-weight:bold;">${G.p.slots.sa ? AUX[G.p.slots.sa].n.split('-')[0] : '❌'}</div>
-      </div>
-    </div>`;
-
-    h += `<div style="color:#d4c040;font-size:11px;font-weight:bold;margin-bottom:6px;border-bottom:1px solid #5a6020;padding-bottom:2px;">РЕСУРСЫ И СКЛАД ОБОРУДОВАНИЯ:</div>`;
-    
-    let hasItems = false;
-    for (const [itId, qty] of Object.entries(G.p.inv)) {
-      if (qty <= 0) continue;
-      hasItems = true;
-      let name = itId, desc = "Материал для крафта или продажи.", isEquip = false;
-
-      if (WEAPONS[itId]) { name = WEAPONS[itId].n; desc = WEAPONS[itId].desc; isEquip = true; }
-      else if (DRONES[itId]) { name = DRONES[itId].n; desc = DRONES[itId].desc; isEquip = true; }
-      else if (AUX[itId]) { name = AUX[itId].n; desc = AUX[itId].desc; isEquip = true; }
-
-      h += `<div class="card" style="display:flex;justify-content:between;align-items:center;margin-bottom:4px;padding:6px;">
-        <div style="flex-grow:1;">
-          <div style="font-size:11px;font-weight:bold;color:#fff;">${name} <span style="color:#d4c040;">x${qty}</span></div>
-          <div style="font-size:8px;color:#8a9040;margin-top:2px;">${desc}</div>
-        </div>`;
-      if (isEquip) {
-        h += `<button class="btn" onclick="useInventoryItem('${itId}')" style="padding:3px 8px;font-size:9px;">УСТАНОВИТЬ</button>`;
-      } else {
-        h += `<button class="btn" onclick="sellItem('${itId}')" style="padding:3px 8px;font-size:9px;background:#442010;border-color:#884020;">ПРОДАТЬ (${LOOT_P[itId] || 10}⛃)</button>`;
-      }
-      h += `</div>`;
-    }
-    if (!hasItems) h += `<div style="text-align:center;color:#666;font-size:11px;padding:15px;">Инвентарь пуст. Охотьтесь на роботов в Диком Секторе!</div>`;
-    cnt.innerHTML = h;
-
-  } else if (activeTab === 'shop') {
-    // 🛒 ТОРГОВЫЙ ТЕРМИНАЛ
-    let h = `<div style="color:#d4c040;font-size:11px;font-weight:bold;margin-bottom:6px;border-bottom:1px solid #5a6020;padding-bottom:2px;">ДОСТУПНОЕ ВООРУЖЕНИЕ И МОДУЛИ:</div>`;
-    
-    // Выводим ВСЁ оригинальное оружие из базы
-    for (const [id, w] of Object.entries(WEAPONS)) {
-      if (w.c === 0) continue; // Пропускаем стартовое
-      h += `<div class="card" style="display:flex;justify-content:between;align-items:center;margin-bottom:4px;padding:6px;">
-        <div style="flex-grow:1;margin-right:6px;">
-          <div style="font-size:11px;font-weight:bold;color:#fff;">${w.g} ${w.n} <span style="color:#8a9040;font-size:9px;">(Лвл ${w.lvl})</span></div>
-          <div style="font-size:8px;color:#aaa;margin-top:2px;">Урон: ${w.d} | КД: ${w.cd}мс | Энергия: ${w.e}</div>
-        </div>
-        <button class="btn" onclick="buyShopItem('w','${id}',${w.c},${w.lvl})" style="padding:4px 8px;font-size:10px;min-width:75px;">${w.c} ⛃</button>
-      </div>`;
-    }
-
-    // Выводим дронов
-    for (const [id, d] of Object.entries(DRONES)) {
-      h += `<div class="card" style="display:flex;justify-content:between;align-items:center;margin-bottom:4px;padding:6px;">
-        <div style="flex-grow:1;margin-right:6px;">
-          <div style="font-size:11px;font-weight:bold;color:#0ff;">🛸 ${d.n}</div>
-          <div style="font-size:8px;color:#aaa;margin-top:2px;">${d.desc}</div>
-        </div>
-        <button class="btn" onclick="buyShopItem('d','${id}',${d.c},1)" style="padding:4px 8px;font-size:10px;min-width:75px;">${d.c} ⛃</button>
-      </div>`;
-    }
-
-    // Выводим AUX модули
-    for (const [id, a] of Object.entries(AUX)) {
-      h += `<div class="card" style="display:flex;justify-content:between;align-items:center;margin-bottom:4px;padding:6px;">
-        <div style="flex-grow:1;margin-right:6px;">
-          <div style="font-size:11px;font-weight:bold;color:#f0f;">📦 ${a.n}</div>
-          <div style="font-size:8px;color:#aaa;margin-top:2px;">${a.desc}</div>
-        </div>
-        <button class="btn" onclick="buyShopItem('a','${id}',${a.c},1)" style="padding:4px 8px;font-size:10px;min-width:75px;">${a.c} ⛃</button>
-      </div>`;
-    }
-    cnt.innerHTML = h;
-
-  } else if (activeTab === 'craft') {
-    // 🛠️ СТАНЦИЯ СБОРКИ (КРАФТ)
-    let h = `<div style="color:#d4c040;font-size:11px;font-weight:bold;margin-bottom:6px;border-bottom:1px solid #5a6020;padding-bottom:2px;">МОДИФИКАЦИЯ И СПЛАВЫ:</div>`;
-    
-    const RECIPES = [
-      { res: 'p5', n: 'ВУЛКАН МК-2', req: { 'Плата': 3, 'Схема': 2, 'Лом': 10 }, desc: 'Тяжелое баллистическое орудие штурма.' },
-      { res: 'e6', n: 'ПЛАЗМЕННЫЙ РЕЗАК', req: { 'Схема': 3, 'Масло': 5, 'Плата': 1 }, desc: 'Высокотемпературный энергетический поток частиц.' },
-      { res: 'РЕД-СПЛАВ', n: 'КОМПОЗИТ РЕД-СПЛАВ', req: { 'Лом': 15, 'Панцирь': 2 }, desc: 'Сверхпрочный материал для бронирования.' },
-      { res: 'БОС-КОР', n: 'ТЯЖЕЛОЕ ЯДРО БОССА', req: { 'МатрицаИИ': 1, 'ЖетонСтражника': 1 }, desc: 'Высокотехнологичный силовой элемент.' }
-    ];
-
-    RECIPES.forEach(r => {
-      let reqStr = '';
-      let canCraft = true;
-      for (const [mat, qty] of Object.entries(r.req)) {
-        const has = G.p.inv[mat] || 0;
-        const color = has >= qty ? '#5f5' : '#f55';
-        if (has < qty) canCraft = false;
-        reqStr += `<span style="color:${color};margin-right:6px;">${mat}:${has}/${qty}</span>`;
-      }
-
-      h += `<div class="card" style="margin-bottom:5px;padding:6px;">
-        <div style="display:flex;justify-content:between;align-items:center;">
-          <div>
-            <div style="font-size:11px;font-weight:bold;color:#fff;">${r.n}</div>
-            <div style="font-size:8px;color:#8a9040;margin:2px 0;">${r.desc}</div>
-          </div>
-          <button class="btn" ${canCraft ? '' : 'disabled'} onclick="craftItem('${r.res}', ${G.p.cr >= 100}, '${encodeURIComponent(JSON.stringify(r.req))}')" style="padding:4px 8px;font-size:10px;">СВАРКА</button>
-        </div>
-        <div style="font-size:8px;margin-top:4px;background:rgba(0,0,0,0.3);padding:3px;border-radius:2px;">${reqStr}</div>
-      </div>`;
-    });
-    cnt.innerHTML = h;
-
-  } else if (activeTab === 'skills') {
-    // 🧠 СЕТКА НЕЙРОСЕТЕВЫХ НАВЫКОВ
-    let h = `<div style="display:flex;justify-content:between;align-items:center;margin-bottom:8px;border-bottom:1px solid #5a6020;padding-bottom:4px;">
-      <div style="color:#d4c040;font-size:11px;font-weight:bold;">МОДЕРНИЗАЦИЯ ПРОЦЕССОРА:</div>
-      <div style="color:#fff;font-size:11px;">ОЧКИ НАВЫКОВ: <span style="color:#0ff;font-weight:bold;">${G.p.skPoints}</span></div>
-    </div>`;
-
-    for (const [id, sk] of Object.entries(SKILLS)) {
-      const lvl = G.p.skills[id] || 0;
-      h += `<div class="card" style="display:flex;justify-content:between;align-items:center;margin-bottom:4px;padding:6px;">
-        <div>
-          <div style="font-size:11px;font-weight:bold;color:#fff;">${sk.n} <span style="color:#d4c040;">[Ур. ${lvl}]</span></div>
-          <div style="font-size:8px;color:#aaa;margin-top:2px;">Эффект: ${sk.d}</div>
-        </div>
-        <button class="btn" ${G.p.skPoints > 0 ? '' : 'disabled'} onclick="upgradeSkill('${id}')" style="padding:4px 10px;font-size:10px;">ИЗУЧИТЬ</button>
-      </div>`;
-    }
-    cnt.innerHTML = h;
-
-  } else if (activeTab === 'quests') {
-    // 📋 СИСТЕМА КОНТРАКТОВ И ЗАДАНИЙ NPC
-    let h = `<div style="color:#d4c040;font-size:11px;font-weight:bold;margin-bottom:6px;border-bottom:1px solid #5a6020;padding-bottom:2px;">ТЕКУЩИЕ ОПЕРАЦИИ И СВЯЗЬ С NPC:</div>`;
-    
-    // Обнаружение находящихся рядом квестгиверов
-    let nearGiver = null;
-    Q_GIVERS.forEach(qg => {
-      if (Math.hypot(qg.x - G.p.wx, qg.y - G.p.wy) < 2.5) nearGiver = qg;
-    });
-
-    if (nearGiver) {
-      h += `<div class="card" style="border-color:#30a0ff;background:rgba(20,40,60,0.4);margin-bottom:8px;">
-        <div style="font-size:11px;font-weight:bold;color:#30a0ff;">${nearGiver.g} ${nearGiver.n} (РЯДОМ)</div>
-        <div style="font-size:9px;color:#ccc;font-style:italic;margin-top:4px;">"${nearGiver.r}"</div>
-      </div>`;
-    }
-
-    if (curQ) {
-      // Отображение прогресса взятого квеста
-      let progressStr = `${curQ.cc || 0} / ${curQ.req}`;
-      h += `<div class="card" style="border-color:#d4c040;background:rgba(40,40,20,0.3);margin-bottom:8px;">
-        <div style="font-size:11px;font-weight:bold;color:#fff;">АКТИВНЫЙ КОНТРАКТ: ${curQ.n}</div>
-        <div style="font-size:8px;color:#aaa;margin:3px 0;">${curQ.desc}</div>
-        <div style="font-size:10px;font-weight:bold;color:#0ff;">Прогресс миссии: ${progressStr}</div>
-        <div style="display:flex;gap:8px;margin-top:6px;font-size:8px;color:#8a9040;">
-          <span>Награда: +${curQ.rCr}⛃</span> <span>+${curQ.rXp} XP</span>
-        </div>`;
-      
-      const canComplete = (curQ.cc >= curQ.req);
-      if (nearGiver && nearGiver.n === curQ.giver) {
-        h += `<button class="btn" ${canComplete ? '' : 'disabled'} onclick="completeActiveQuest()" style="margin-top:8px;width:100%;padding:5px;">${canComplete ? 'ЗАВЕРШИТЬ МИССИЮ И ПОЛУЧИТЬ НАГРАДУ' : 'ТРЕБОВАНИЯ НЕ ВЫПОЛНЕНЫ'}</button>`;
-      } else {
-        h += `<div style="font-size:8px;color:#ff5555;margin-top:6px;text-align:center;">Для сдачи контракта вернитесь к NPC: ${curQ.giver}</div>`;
-      }
-      h += `</div>`;
-    } else {
-      h += `<div style="font-size:9px;color:#8a9040;margin-bottom:8px;">ДОСТУПНЫЕ ПОДРЯДЫ В ЭТОМ СЕКТОРЕ:</div>`;
-      QUESTS_DB.forEach(q => {
-        const isThisGiverNear = nearGiver && nearGiver.n === q.giver;
-        h += `<div class="card" style="margin-bottom:4px;opacity:${isThisGiverNear ? 1 : 0.65};">
-          <div style="display:flex;justify-content:between;align-items:center;">
-            <div>
-              <div style="font-size:10px;font-weight:bold;color:#fff;">${q.n}</div>
-              <div style="font-size:7px;color:#8a9040;">Выдает: ${q.giver}</div>
-            </div>
-            <button class="btn" ${isThisGiverNear ? '' : 'disabled'} onclick="acceptQuest('${q.id}')" style="padding:3px 8px;font-size:9px;">ВЗЯТЬ КОНТРАКТ</button>
-          </div>
-          <div style="font-size:8px;color:#bbb;margin-top:3px;">${q.desc}</div>
-        </div>`;
-      });
-    }
-    cnt.innerHTML = h;
-  }
-}
-
+// PORTAL
 // ═══════════════════════════════════
-// BUTTON TRIGGER FUNCTIONS (RECEPTORS)
+function drawPortal(p){
+  const{x,y}=w2p(p.wx,p.wy);const t=G.time*.001,spin=t*1.8;
+  ctx.save();ctx.translate(x,y-22);
+  drawShadow(ctx,0,21,22,9);
+  for(let r=3;r>=1;r--){
+    const pg=ctx.createLinearGradient(-20,-20,20,20);pg.addColorStop(0,p.col+'44');pg.addColorStop(1,p.col+'22');
+    ctx.strokeStyle=p.col+(r===3?'44':r===2?'88':'cc');ctx.lineWidth=3+r;
+    ctx.beginPath();ctx.arc(0,0,16+r*4,spin,spin+Math.PI*1.6);ctx.stroke();
+  }
+  const pg2=ctx.createRadialGradient(0,0,2,0,0,16);pg2.addColorStop(0,p.col+'aa');pg2.addColorStop(.6,p.col+'33');pg2.addColorStop(1,'transparent');
+  ctx.fillStyle=pg2;ctx.beginPath();ctx.arc(0,0,16,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=p.col;ctx.shadowColor=p.col;ctx.shadowBlur=20;ctx.beginPath();ctx.arc(0,0,6,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  ctx.fillStyle='#ffffff88';ctx.beginPath();ctx.arc(-2,-2,2.5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=p.col;ctx.font='bold 8px Courier New';ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(p.back?'← НАЗАД':'→ '+(ZONES[p.toZone]?ZONES[p.toZone].name:''),0,-26);
+  ctx.restore();
+}
+ 
 // ═══════════════════════════════════
-function selectTab(t) {
-  activeTab = t;
-  document.querySelectorAll('#tabs .tab').forEach(el => el.classList.remove('act'));
-  const targetBtn = Array.from(document.querySelectorAll('#tabs .tab')).find(el => el.getAttribute('onclick').includes(t));
-  if (targetBtn) targetBtn.classList.add('act');
-  renderPanel();
-}
-
-function toggleAuto() {
-  G.auto = !G.auto;
-  const btn = document.getElementById('b_auto');
-  btn.innerText = G.auto ? 'АВТО: ВКЛ' : 'АВТО: ВЫКЛ';
-  btn.style.borderColor = G.auto ? '#00ff88' : '#5a6020';
-}
-
-function cycleZone() {
-  G.zone = (G.zone + 1) % ZONES.length;
-  // Очищаем сущности старой зоны
-  G.monsters.forEach(m => { if (loaded3DObjects.has(`mon_${m.id}`)) scene.remove(loaded3DObjects.get(`mon_${m.id}`)); });
-  G.items.forEach(it => { if (loaded3DObjects.has(`item_${it.id}`)) scene.remove(loaded3DObjects.get(`item_${it.id}`)); });
-  G.monsters = [];
-  G.items = [];
-  G.bullets = [];
-  
-  // Принудительно перегенерируем 3D ландшафт
-  for (const [k, m] of chunksMap.entries()) { scene.remove(m); }
-  chunksMap.clear();
-  
-  showNotif(`Вход в сектор: ${ZONES[G.zone].name}`);
-  update3DWorld();
-  updateHUD();
-  if (activeTab === 'quests') renderPanel();
-}
-
-function useInventoryItem(id) {
-  if (WEAPONS[id]) {
-    G.p.w2 = id;
-    showNotif(`Второе орудие установлено: ${WEAPONS[id].n}`);
-  } else if (DRONES[id]) {
-    const d = DRONES[id];
-    if (d.t === 'def') G.p.slots.sw = id;
-    else G.p.slots.se = id;
-    showNotif(`Дрон активирован: ${d.n}`);
-  } else if (AUX[id]) {
-    G.p.slots.sa = id;
-    showNotif(`Доп. модуль смонтирован: ${AUX[id].n}`);
-  }
-  renderPanel();
-}
-
-function sellItem(id) {
-  if ((G.p.inv[id] || 0) > 0) {
-    G.p.inv[id]--;
-    G.p.cr += LOOT_P[id] || 10;
-    showNotif(`Продано: ${id} (+${LOOT_P[id] || 10}⛃)`);
-    renderPanel();
-    updateHUD();
-  }
-}
-
-function buyShopItem(type, id, price, rLvl) {
-  if (G.p.cr < price) return showNotif("Недостаточно кредитов!", true);
-  if (G.p.lvl < rLvl) return showNotif(`Требуется уровень пилота ${rLvl}!`, true);
-  
-  G.p.cr -= price;
-  G.p.inv[id] = (G.p.inv[id] || 0) + 1;
-  showNotif("Оборудование куплено и доставлено на склад!");
-  renderPanel();
-  updateHUD();
-}
-
-function craftItem(resId, hasCr, reqJson) {
-  if (!hasCr) return showNotif("Требуется 100 кредитов для калибровки верстака!", true);
-  const req = JSON.parse(decodeURIComponent(reqJson));
-  
-  for (const [mat, qty] of Object.entries(req)) {
-    if ((G.p.inv[mat] || 0) < qty) return showNotif("Сборка отменена: нехватка материалов!", true);
-  }
-
-  // Списываем компоненты
-  for (const [mat, qty] of Object.entries(req)) { G.p.inv[mat] -= qty; }
-  G.p.cr -= 100;
-  G.p.inv[resId] = (G.p.inv[resId] || 0) + 1;
-  
-  showNotif(`Успешный крафт: Собрано ${resId}!`);
-  renderPanel();
-  updateHUD();
-}
-
-function upgradeSkill(id) {
-  if (G.p.skPoints <= 0) return;
-  G.p.skPoints--;
-  G.p.skills[id] = (G.p.skills[id] || 0) + 1;
-  SKILLS[id].f(G.p); // Применяем эффект перка мгновенно
-  showNotif(`Процессор обновлен: ${SKILLS[id].n}`);
-  renderPanel();
-  updateHUD();
-}
-
-function acceptQuest(id) {
-  if (curQ) return showNotif("Вы уже выполняете один контракт!", true);
-  const q = QUESTS_DB.find(x => x.id === id);
-  if (!q) return;
-  curQ = { ...q, cc: 0 };
-  showNotif(`Взят контракт: ${q.n}. Выполняйте!`);
-  renderPanel();
-}
-
-function completeActiveQuest() {
-  if (!curQ || curQ.cc < curQ.req) return;
-  G.p.cr += curQ.rCr;
-  G.p.xp += curQ.rXp;
-  showNotif(`Контракт выполнен! +${curQ.rCr}⛃ +${curQ.rXp}XP`);
-  curQ = null;
-  
-  // Проверка левелапа игрока
-  const reqXp = G.p.lvl * 250;
-  if (G.p.xp >= reqXp) {
-    G.p.xp -= reqXp;
-    G.p.lvl++;
-    G.p.skPoints++;
-    showNotif(`🎉 ПОВЫШЕНИЕ РАНГА ПИЛОТА: УРОВЕНЬ ${G.p.lvl}! Начислено Очко Модернизации.`, false);
-  }
-  
-  renderPanel();
-  updateHUD();
-  saveGame();
-}
-
-function unequipW2() {
-  if (G.p.w2) {
-    G.p.inv[G.p.w2] = (G.p.inv[G.p.w2] || 0) + 1;
-    G.p.w2 = null;
-    showNotif("Второе орудие демонтировано.");
-    renderPanel();
-  }
-}
-
-function unequipSlot(slot) {
-  const item = G.p.slots[slot];
-  if (item) {
-    G.p.inv[item] = (G.p.inv[item] || 0) + 1;
-    G.p.slots[slot] = null;
-    showNotif("Модуль перенесен на склад.");
-    renderPanel();
-  }
-}
-
+// PROJECTILES & PARTICLES
 // ═══════════════════════════════════
-// MAIN GAME LOOP (3D & LOGIC TICKER)
+function drawProjectile(pr){
+  const{x,y}=w2p(pr.wx,pr.wy);
+  if(pr.fromBoss){ctx.fillStyle='#ff3030';ctx.shadowColor='#ff3030';ctx.shadowBlur=14;ctx.beginPath();ctx.arc(x,y,7,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}
+  else if(pr.type==='energy'){ctx.fillStyle='#40a8d0';ctx.shadowColor='#40a8d0';ctx.shadowBlur=10;ctx.beginPath();ctx.arc(x,y,4.5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}
+  else if(pr.type==='rocket'){ctx.fillStyle='#e07020';ctx.shadowColor='#e07020';ctx.shadowBlur=10;ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}
+  else{ctx.fillStyle='#d4c040';ctx.shadowColor='#d4c040';ctx.shadowBlur=6;ctx.fillRect(x-3.5,y-3.5,7,7);ctx.shadowBlur=0;}
+}
+function drawParticle(pt){
+  const{x,y}=w2p(pt.wx,pt.wy);ctx.globalAlpha=pt.life/pt.maxLife;ctx.fillStyle=pt.col;
+  if(pt.glow){ctx.shadowColor=pt.col;ctx.shadowBlur=8;}ctx.beginPath();ctx.arc(x,y,pt.r,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+}
+function spawnParts(wx,wy,col,n,glow=false){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,s=.05+Math.random()*.15;G.parts.push({wx,wy,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:24,maxLife:24,col,r:1.5+Math.random()*3,glow});}}
+ 
 // ═══════════════════════════════════
-let lastW1Fire = 0;
-let lastW2Fire = 0;
-let lastRegenTime = 0;
-let lastSpawnTime = 0;
-
-function gameTick(timestamp) {
-  if (!G.isRun) return;
-  requestAnimationFrame(gameTick);
-
-  const dt = (timestamp - G.lastTime) / 1000;
-  G.lastTime = timestamp;
-
-  if (dt > 0.5) return; // Исключаем скачки при сворачивании вкладки браузера
-
-  // 1. Управление вектором перемещения Меха игрока
-  if (G.jd.x !== 0 || G.jd.y !== 0) {
-    const speed = 4.2 * dt; // Скорость перемещения
-    const nx = G.p.wx + G.jd.x * speed;
-    const ny = G.p.wy + G.jd.y * speed;
-
-    if (!checkCollision(nx, G.p.wy, 0.35)) G.p.wx = nx;
-    if (!checkCollision(G.p.wx, ny, 0.35)) G.p.wy = ny;
-
-    // Поворачиваем 3D-модель меха по направлению его хода
-    if (playerMesh) {
-      const angle = Math.atan2(-G.jd.y, G.jd.x) + Math.PI / 2;
-      playerMesh.rotation.y = angle;
+// MINIMAP
+// ═══════════════════════════════════
+function drawMinimap(){
+  const mw=82,mh=82,mx=C.width-mw-5,my=5;
+  MM_X=mx;MM_Y=my;MM_W=mw;MM_H=mh;
+  ctx.fillStyle='#101208cc';ctx.beginPath();ctx.roundRect(mx,my,mw,mh,6);ctx.fill();
+  ctx.strokeStyle='#5a6020';ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(mx,my,mw,mh,6);ctx.stroke();
+  const sc=mw/80,cx=G.p.wx,cy=G.p.wy;
+  const szx=mx+mw/2+(SZ_X-cx)*sc,szy=my+mh/2+(SZ_Y-cy)*sc;
+  const szw=SZ_W*sc,szh=SZ_H*sc;
+  if(szx>mx-szw&&szx<mx+mw&&szy>my-szh&&szy<my+mh){ctx.fillStyle='#40a02044';ctx.fillRect(Math.max(mx,szx),Math.max(my,szy),szw,szh);}
+  for(const n of G.npcs){const dx=(n.wx-cx)*sc,dy=(n.wy-cy)*sc;if(Math.abs(dx)<mw/2&&Math.abs(dy)<mh/2){ctx.fillStyle=n.type==='mechanic'?'#40a0e0':'#40c020';ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=4;ctx.beginPath();ctx.arc(mx+mw/2+dx,my+mh/2+dy,3,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}}
+  for(const m of G.mons){if(m.dead||m.hp<=0)continue;const dx=(m.wx-cx)*sc,dy=(m.wy-cy)*sc;if(Math.abs(dx)<mw/2&&Math.abs(dy)<mh/2){ctx.fillStyle=m.tier===2?'#ff3030':m.tier===1?'#4488ff':m.aggroed?'#ff8020':'#c07030';ctx.beginPath();ctx.arc(mx+mw/2+dx,my+mh/2+dy,1.5,0,Math.PI*2);ctx.fill();}}
+  for(const p of G.portals){const dx=(p.wx-cx)*sc,dy=(p.wy-cy)*sc;if(Math.abs(dx)<mw/2&&Math.abs(dy)<mh/2){ctx.fillStyle=p.col;ctx.shadowColor=p.col;ctx.shadowBlur=5;ctx.beginPath();ctx.arc(mx+mw/2+dx,my+mh/2+dy,4,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}}
+  if(G.boss&&!G.boss.dead){const dx=(G.boss.wx-cx)*sc,dy=(G.boss.wy-cy)*sc;if(Math.abs(dx)<mw/2&&Math.abs(dy)<mh/2){ctx.fillStyle='#ff3030';ctx.shadowColor='#ff3030';ctx.shadowBlur=6;ctx.beginPath();ctx.arc(mx+mw/2+dx,my+mh/2+dy,5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}}
+  ctx.fillStyle='#d4c040';ctx.shadowColor='#d4c040';ctx.shadowBlur=5;ctx.beginPath();ctx.arc(mx+mw/2,my+mh/2,4,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  ctx.fillStyle='#8a9040';ctx.font='6px Courier New';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('MAP [ТАП]',mx+mw/2,my+3);
+}
+ 
+function drawHUDCanvas(){
+  const z=ZONES[G.zone];
+  // zone label with nice background
+  const zt=`// ${z.name} — ЗОНА ${G.zone+1}/3`;
+  ctx.font='bold 9px Courier New';
+  const tw=ctx.measureText(zt).width;
+  ctx.fillStyle='#00000055';ctx.beginPath();ctx.roundRect(6,4,tw+12,22,4);ctx.fill();
+  ctx.fillStyle=z.acc;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(zt,12,7);
+  const alive=G.mons.filter(m=>!m.dead&&m.hp>0).length;
+  ctx.fillStyle='#a0a860';ctx.font='8px Courier New';ctx.fillText('ВРАГОВ: '+alive+(G.boss&&!G.boss.dead?' + БОСС':''),12,18);
+  // target reticles
+  for(let wi=0;wi<2;wi++){
+    const tg=G.targets[wi];if(!tg)continue;
+    const{x,y}=w2p(tg.wx,tg.wy);
+    const col=wi===0?'#e06820':'#40a8d0';
+    ctx.save();ctx.strokeStyle=col+'aa';ctx.lineWidth=1.5;
+    const r=22;
+    const corners=[[-r,0,-r*.4,0],[r*.4,0,r,0],[0,-r,0,-r*.4],[0,r*.4,0,r]];
+    ctx.beginPath();ctx.moveTo(x-r,y);ctx.lineTo(x-r*.4,y);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x+r*.4,y);ctx.lineTo(x+r,y);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x,y-r);ctx.lineTo(x,y-r*.4);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x,y+r*.4);ctx.lineTo(x,y+r);ctx.stroke();
+    ctx.beginPath();ctx.arc(x,y,r*.7,0,Math.PI*2);ctx.stroke();
+    ctx.restore();
+  }
+  // safe zone indicator
+  if(inSafeZone(G.p.wx,G.p.wy)){
+    ctx.fillStyle='#40c020aa';ctx.font='bold 10px Courier New';ctx.textAlign='center';
+    ctx.fillText('🛡 БЕЗОПАСНАЯ ЗОНА',C.width/2,36);
+  }
+}
+ 
+// ═══════════════════════════════════
+// AUTO TARGET
+// ═══════════════════════════════════
+function autoTarget(){
+  const all=[...G.mons.filter(m=>!m.dead&&m.hp>0)];
+  if(G.boss&&!G.boss.dead)all.push(G.boss);
+  for(let wi=0;wi<2;wi++){
+    if(!G.p.w[wi]){G.targets[wi]=null;continue;}
+    const w=WEAPONS.find(x=>x.id===G.p.w[wi]);const wr=w.rng/PPT+2;
+    let best=null,bestD=wr;
+    for(const e of all){const d=Math.hypot(e.wx-G.p.wx,e.wy-G.p.wy);if(d<bestD){bestD=d;best=e;}}
+    G.targets[wi]=best;
+  }
+}
+ 
+// ═══════════════════════════════════
+// FIRE
+// ═══════════════════════════════════
+function ft(wi,e){
+  if(e)e.preventDefault();if(!G.started)return;
+  const p=G.p;if(!p.w[wi])return notify('SLOT '+(wi+1)+' пуст!');if(G.ftimers[wi]>0)return;
+  const w=WEAPONS.find(x=>x.id===p.w[wi]);if(!w)return;
+  if(p.en<w.ec)return notify('НЕТ ЭНЕРГИИ');
+  const tg=G.targets[wi];let dx,dy;
+  if(tg){dx=tg.wx-p.wx;dy=tg.wy-p.wy;}else{dx=G.jd.x||1;dy=G.jd.y||0;}
+  const len=Math.hypot(dx,dy)||1;dx/=len;dy/=len;
+  p.en=Math.max(0,p.en-w.ec);
+  G.ftimers[wi]=1/w.rof;
+  const sk=w.t==='ballistic'?p.sk.bal:w.t==='energy'?p.sk.enw:p.sk.rkt;
+  const dmg=Math.round(w.dmg*(1+sk*.12)),rng=w.rng/PPT+sk*.3;
+  G.projs.push({wx:p.wx,wy:p.wy,vx:dx*.32,vy:dy*.32,type:w.t,dmg,range:rng,traveled:0,fromBoss:false});
+  psh(w.t);
+  const btn=document.getElementById('wb'+(wi+1));btn.classList.add('lit');setTimeout(()=>btn.classList.remove('lit'),100);
+}
+ 
+// ═══════════════════════════════════
+// UPDATE
+// ═══════════════════════════════════
+function update(dt){
+  const p=G.p;G.time+=dt*1000;
+  // movement
+  if(G.jd.x||G.jd.y){
+    const l=Math.hypot(G.jd.x,G.jd.y)||1,spd=.1;
+    const nx=p.wx+G.jd.x/l*spd,ny=p.wy+G.jd.y/l*spd;
+    if(!isBlocked(nx,p.wy))p.wx=Math.max(1,Math.min(WW-1,nx));
+    if(!isBlocked(p.wx,ny))p.wy=Math.max(1,Math.min(WH-1,ny));
+    p.facing=Math.atan2(G.jd.y,G.jd.x);p.walk+=dt*3.5;
+  }
+  p.en=Math.min(p.maxEn,p.en+p.enRegen*dt);
+  for(let i=0;i<2;i++)if(G.ftimers[i]>0)G.ftimers[i]-=dt;
+  autoTarget();
+  // auto-battle: fire both slots automatically
+  if(G.autoBattle){for(let wi=0;wi<2;wi++){if(G.targets[wi]&&G.ftimers[wi]<=0)ft(wi,null);}}
+ 
+  // respawn ~3min
+  G.spawnTimer-=dt;
+  if(G.spawnTimer<=0){const alive=G.mons.filter(m=>!m.dead&&m.hp>0).length;if(alive<250+G.zone*80)spawnMon();G.spawnTimer=170+Math.random()*20;}
+ 
+  // portal
+  if(!G.zone_entered)for(const port of G.portals){if(Math.hypot(p.wx-port.wx,p.wy-port.wy)<2.5){enterZone(port.toZone);break;}}
+ 
+  // TURRETS — shoot monsters near gates
+  for(const tr of G.turrets){
+    tr.shootT-=dt;if(tr.shootT>0)continue;
+    let closestMon=null,closestD=tr.range;
+    for(const m of G.mons){
+      if(m.dead||m.hp<=0)continue;
+      const d=Math.hypot(m.wx-tr.wx,m.wy-tr.wy);
+      if(d<closestD){closestD=d;closestMon=m;}
+    }
+    if(closestMon){
+      tr.shootT=1.2;
+      closestMon.hp-=tr.dmg;
+      spawnParts(closestMon.wx,closestMon.wy,'#80ff40',4,true);
+      if(closestMon.hp<=0)killMon(closestMon);
     }
   }
-
-  // Привязываем 3D позицию меха к его логическим координатам
-  if (playerMesh) {
-    playerMesh.position.set(G.p.wx * T_SIZE, 0, G.p.wy * T_SIZE);
-    // Плавное следование камеры за роботом в изометрии
-    camera.position.set(G.p.wx * T_SIZE, 18, G.p.wy * T_SIZE + 12);
-    camera.lookAt(playerMesh.position);
+ 
+  // projectiles
+  for(const pr of G.projs){
+    pr.wx+=pr.vx;pr.wy+=pr.vy;pr.traveled+=Math.hypot(pr.vx,pr.vy);
+    if(pr.traveled>pr.range){pr.dead=true;continue;}
+    if(!pr.fromBoss){
+      for(const m of G.mons){if(m.dead||m.hp<=0)continue;if(Math.hypot(pr.wx-m.wx,pr.wy-m.wy)<.9){m.hp-=pr.dmg;pr.dead=true;m.aggroed=true;spawnParts(m.wx,m.wy,'#e07020',5,true);if(m.hp<=0)killMon(m);break;}}
+      if(!pr.dead&&G.boss&&!G.boss.dead&&Math.hypot(pr.wx-G.boss.wx,pr.wy-G.boss.wy)<2.2){G.boss.hp-=pr.dmg;pr.dead=true;G.boss.aggroed=true;document.getElementById('bbar').style.display='flex';spawnParts(G.boss.wx,G.boss.wy,'#ff4040',8,true);if(G.boss.hp<=0)killBoss();}
+    }else{if(Math.hypot(pr.wx-p.wx,pr.wy-p.wy)<.9){p.hp=Math.max(0,p.hp-pr.dmg);pr.dead=true;spawnParts(p.wx,p.wy,'#ff4040',5,true);if(p.hp<=0)respawn();}}
   }
-
-  // 2. Обновление мира и чанков вокруг игрока
-  update3DWorld();
-
-  // 3. Автоматическая стрельба во время боя
-  const now = Date.now();
-  let cdMod = 1.0;
-  if (G.p.slots.se === 'd3') cdMod *= 0.90; // Модуль ИИ ускоряет перезарядку
-
-  if (G.auto) {
-    const w1Data = WEAPONS[G.p.w1];
-    if (w1Data && now - lastW1Fire >= w1Data.cd * cdMod) {
-      fireWeapon(G.p.w1, false);
-      lastW1Fire = now;
-    }
-    if (G.p.w2) {
-      const w2Data = WEAPONS[G.p.w2];
-      if (w2Data && now - lastW2Fire >= w2Data.cd * cdMod) {
-        fireWeapon(G.p.w2, true);
-        lastW2Fire = now;
-      }
-    }
+  G.projs=G.projs.filter(x=>!x.dead);
+ 
+  // monsters — prevent entering safe zone
+  for(const m of G.mons){
+    if(m.dead)continue;
+    if(m.hp<=0&&!m.dead){m.deathAnim=(m.deathAnim||0)+dt*3;if(m.deathAnim>=1)m.dead=true;continue;}
+    const d=Math.hypot(m.wx-p.wx,m.wy-p.wy);
+    if(d>AI_LITE){m.walk+=dt*.2;continue;}
+    if(d>AI_FULL){m.walk+=dt*.7;if(m.aggroed&&!inSafeZone(m.wx,m.wy)){m.wx+=(p.wx-m.wx)/d*m.spd*.4;m.wy+=(p.wy-m.wy)/d*m.spd*.4;}continue;}
+    m.walk+=dt*2;
+    if(d<m.aggroRange)m.aggroed=true;if(d>m.aggroRange*5)m.aggroed=false;
+    if(m.aggroed&&d>.8&&!inSafeZone(m.wx,m.wy)){
+      const nx=m.wx+(p.wx-m.wx)/d*m.spd,ny=m.wy+(p.wy-m.wy)/d*m.spd;
+      // block monsters from entering safe zone
+      if(!isBlocked(nx,m.wy)&&!inSafeZone(nx,m.wy))m.wx=nx;
+      if(!isBlocked(m.wx,ny)&&!inSafeZone(m.wx,ny))m.wy=ny;
+      m.facing=Math.atan2(p.wy-m.wy,p.wx-m.wx);
+    }else if(!m.aggroed){m.wx+=Math.sin(m.walk*.4+m.wx)*.006;m.wy+=Math.cos(m.walk*.4+m.wy)*.006;m.wx=Math.max(1,Math.min(WW-1,m.wx));m.wy=Math.max(1,Math.min(WH-1,m.wy));}
+    if(m.aggroed&&d<1.2&&!inSafeZone(p.wx,p.wy)){m.atkT-=dt;if(m.atkT<=0){p.hp=Math.max(0,p.hp-m.atk);m.atkT=1.5;spawnParts(p.wx,p.wy,'#ff4040',3,true);if(p.hp<=0)respawn();}}
   }
-
-  // 4. Поведение Снарядов / Пуль в 3D пространстве
-  for (let i = G.bullets.length - 1; i >= 0; i--) {
-    const b = G.bullets[i];
-    b.x += b.vx * dt;
-    b.y += b.vy * dt;
-
-    // Проверяем коллизии пули со стенами мира
-    if (getTileType(Math.floor(b.x), Math.floor(b.y)) === 'wall') {
-      G.bullets.splice(i, 1);
-      continue;
-    }
-
-    // Проверяем попадание во врагов
-    let hit = false;
-    for (let j = G.monsters.length - 1; j >= 0; j--) {
-      const m = G.monsters[j];
-      const radius = m.isBoss ? 1.2 : 0.45;
-      if (Math.hypot(m.x - b.x, m.y - b.y) < radius) {
-        m.hp -= b.dmg;
-        hit = true;
-        G.bullets.splice(i, 1);
-
-        if (m.hp <= 0) {
-          // Моб уничтожен! Начисление наград
-          const xpGained = m.isBoss ? (150 + G.zone * 200) : (15 + G.zone * 15);
-          const crGained = m.isBoss ? (400 + G.zone * 500) : (12 + G.zone * 15);
-          G.p.xp += xpGained;
-          G.p.cr += crGained;
-
-          // Засчитываем в текущий контракт квеста
-          if (curQ) {
-            if (curQ.t === 'kill') { curQ.cc++; if (activeTab === 'quests') renderPanel(); }
-            else if (curQ.t === 'kill_type' && m.n === curQ.tgt) { curQ.cc++; if (activeTab === 'quests') renderPanel(); }
-          }
-
-          // Выпадение лута (материалов) на поле боя
-          const zoneInfo = ZONES[G.zone];
-          const lootName = m.isBoss ? zoneInfo.bossLoot[Math.floor(Math.random() * zoneInfo.bossLoot.length)] : zoneInfo.loot[Math.floor(Math.random() * zoneInfo.loot.length)];
-          
-          G.items.push({
-            id: Math.random().toString(36).substr(2, 9),
-            n: lootName, x: m.x, y: m.y
-          });
-
-          showNotif(`Уничтожен: ${m.n} (+${crGained}⛃)`);
-          G.monsters.splice(j, 1);
-          
-          // Проверка Левелапа пилота
-          const reqXp = G.p.lvl * 250;
-          if (G.p.xp >= reqXp) {
-            G.p.xp -= reqXp;
-            G.p.lvl++;
-            G.p.skPoints++;
-            showNotif(`🎉 РАНГ ПИЛОТА ПОВЫШЕН: УРОВЕНЬ ${G.p.lvl}!`, false);
-          }
-          updateHUD();
-        }
-        break;
-      }
-    }
-    
-    // Удаляем пули, улетевшие слишком далеко от пилота (оптимизация сцены)
-    if (!hit && Math.hypot(b.x - G.p.wx, b.y - G.p.wy) > 25) {
-      G.bullets.splice(i, 1);
+ 
+  // boss
+  if(G.boss&&!G.boss.dead){
+    const b=G.boss,d=Math.hypot(b.wx-p.wx,b.wy-p.wy);
+    if(b.aggroed){
+      b.walk+=dt*1.2;const bs=b.spd*(b.hp<b.maxHp*.4?1.6:1);
+      if(d>2){const nx=b.wx+(p.wx-b.wx)/d*bs,ny=b.wy+(p.wy-b.wy)/d*bs;if(!isBlocked(nx,b.wy))b.wx=nx;if(!isBlocked(b.wx,ny))b.wy=ny;}
+      if(d<2.5){b.atkT-=dt;if(b.atkT<=0){p.hp=Math.max(0,p.hp-b.atk);b.atkT=1.2;spawnParts(p.wx,p.wy,'#ff4040',7,true);if(p.hp<=0)respawn();}}
+      b.shootT-=dt;if(b.shootT<=0){b.shootT=b.hp<b.maxHp*.5?1.2:2.2;const shots=b.hp<b.maxHp*.3?3:b.hp<b.maxHp*.5?2:1;for(let s=0;s<shots;s++){const ang=Math.atan2(p.wy-b.wy,p.wx-b.wx)+(s-(shots-1)/2)*.4;G.projs.push({wx:b.wx,wy:b.wy,vx:Math.cos(ang)*.22,vy:Math.sin(ang)*.22,type:'boss',dmg:Math.round(b.atk*.04),range:20,traveled:0,fromBoss:true});}}
     }
   }
-
-  // 5. Поведение ИИ Монстров (Преследование меха)
-  G.monsters.forEach(m => {
-    const dist = Math.hypot(G.p.wx - m.x, G.p.wy - m.y);
-    const inSafe = (m.x >= SZ_X && m.x < SZ_X + SZ_W && m.y >= SZ_Y && m.y < SZ_Y + SZ_H);
-    
-    if (dist < 15 && !inSafe) { // Монстры преследуют игрока, если он вышел из Аванпоста
-      const dx = G.p.wx - m.x;
-      const dy = G.p.wy - m.y;
-      const nx = m.x + (dx / dist) * m.s * dt;
-      const ny = m.y + (dy / dist) * m.s * dt;
-
-      if (!checkCollision(nx, m.y, m.isBoss ? 1.0 : 0.4)) m.x = nx;
-      if (!checkCollision(m.x, ny, m.isBoss ? 1.0 : 0.4)) m.y = ny;
-
-      // Нанесение урона меху в ближнем бою
-      const attackDist = m.isBoss ? 1.4 : 0.65;
-      if (dist < attackDist) {
-        damagePlayer((m.isBoss ? 28 : 6) * dt);
-        updateHUD();
-      }
-    }
-  });
-
-  // 6. Сбор выпавшего лута при наезде корпуса
-  for (let i = G.items.length - 1; i >= 0; i--) {
-    const it = G.items[i];
-    if (Math.hypot(it.x - G.p.wx, it.y - G.p.wy) < 0.8) {
-      G.p.inv[it.n] = (G.p.inv[it.n] || 0) + 1;
-      showNotif(`Подобран материал: ${it.n}`);
-      
-      if (curQ && curQ.t === 'loot' && it.n === curQ.tgt) {
-        curQ.cc = G.p.inv[it.n];
-        if (activeTab === 'quests') renderPanel();
-      }
-
-      G.items.splice(i, 1);
-      if (activeTab === 'inv') renderPanel();
-    }
+ 
+  for(const pt of G.parts){pt.wx+=pt.vx;pt.wy+=pt.vy;pt.life--;}G.parts=G.parts.filter(x=>x.life>0);
+  G.saveTimer-=dt;if(G.saveTimer<=0){saveGame();G.saveTimer=30;}
+  updHUD();
+}
+ 
+function killMon(m){
+  spawnParts(m.wx,m.wy,m.tier===2?'#ff4040':m.tier===1?'#4488ff':'#e07020',14,true);
+  G.p.xp+=m.xp;G.p.cr+=Math.round((5+G.zone*3)*m.lootMult);
+  if(G.p.inv.length<G.p.invMax){const nm=m.tier>0?m.loot+'★'.repeat(m.tier):m.loot;G.p.inv.push({type:'loot',name:nm,id:'l'+G.time+Math.random(),price:Math.round((LOOT_P[m.loot]||20)*m.lootMult)});}
+  // quest progress
+  if(G.quest&&G.quest.zone===G.zone&&G.quest.def.goal==='kill'&&!G.quest.done){
+    G.quest.progress=Math.min(G.quest.def.cnt,(G.quest.progress||0)+1);
+    if(G.quest.progress>=G.quest.def.cnt){G.quest.done=true;notify('✅ ЗАДАНИЕ ВЫПОЛНЕНО! Вернись к квестодателю!');}
+    updQuestHUD();
   }
-
-  // 7. Пассивная ежесекундная регенерация HP и энергии реактора
-  if (now - lastRegenTime >= 1000) {
-    let hpReg = G.p.sk_hpreg || 0;
-    let enReg = 2.5 + (G.p.sk_enreg || 0); // Базовый энергокамбэк реактора
-
-    if (G.p.slots.sa === 'a1') hpReg += 1.0;
-    if (G.p.slots.sa === 'a4') hpReg += 3.0;
-    if (G.p.slots.sa === 'a2') enReg += 1.0;
-    if (G.p.slots.sa === 'a5') enReg += 4.0;
-
-    // В безопасной зоне регенерация ускорена в 4 раза
-    const isSafe = (G.p.wx >= SZ_X && G.p.wx < SZ_X + SZ_W && G.p.wy >= SZ_Y && G.p.wy < SZ_Y + SZ_H);
-    if (isSafe) { hpReg += 15.0; enReg += 20.0; }
-
-    G.p.hp = Math.min(G.p.mhp, G.p.hp + hpReg);
-    G.p.en = Math.min(G.p.men, G.p.en + enReg);
-    
-    updateHUD();
-    lastRegenTime = now;
+  if(G.p.xp>=G.p.xpNext)levelUp();updHUD();
+}
+function killBoss(){
+  const b=G.boss;for(let i=0;i<8;i++)spawnParts(b.wx+(Math.random()-.5)*5,b.wy+(Math.random()-.5)*5,'#ff4040',18,true);
+  G.p.xp+=b.xp;G.p.cr+=b.cr;
+  for(const l of b.loot)if(G.p.inv.length<G.p.invMax)G.p.inv.push({type:'loot',name:l,id:'l'+G.time+Math.random(),price:600+G.zone*200});
+  if(Math.random()<.1){const uids=['godshot','voidb','omegar'];const uid=uids[G.zone%3];const uw=WEAPONS.find(x=>x.id===uid);if(uw&&G.p.inv.length<G.p.invMax){G.p.inv.push({type:'weapon',id:uid,name:'⭐ '+uw.n,unique:true});notify('🌟 УНИКАЛЬНОЕ: '+uw.n+'!');}}
+  b.dead=true;document.getElementById('bbar').style.display='none';notify('🏆 БОСС: +'+b.cr+' CR');
+  if(G.quest&&G.quest.zone===G.zone&&G.quest.def.goal==='boss'&&!G.quest.done){
+    G.quest.progress=1;G.quest.done=true;notify('✅ ЗАДАНИЕ ВЫПОЛНЕНО! Вернись к квестодателю!');updQuestHUD();
   }
+  if(G.p.xp>=G.p.xpNext)levelUp();updHUD();
+}
+function respawn(){notify('МЕХ УНИЧТОЖЕН...');G.p.hp=Math.round(G.p.maxHp*.4);G.p.wx=SPAWN_X;G.p.wy=SPAWN_Y;}
+function levelUp(){G.p.xp-=G.p.xpNext;G.p.lvl++;G.p.xpNext=Math.round(G.p.xpNext*1.45);G.p.skillPts++;document.getElementById('overlay-lvl').style.display='flex';renderSkills();}
+function enterZone(to){if(G.zone_entered)return;G.zone_entered=true;notify('Переход: '+ZONES[to].name+'...');setTimeout(()=>{G.zone=to;G.p.wx=SPAWN_X;G.p.wy=SPAWN_Y;CHUNKS.clear();genWorld();calcStats();notify('Зона: '+ZONES[G.zone].name);},900);}
+function renderSkills(){
+  const p=G.p;const sks=[{k:'bal',l:'BALLISTIC',d:'+12% пушки'},{k:'enw',l:'ENERGY',d:'+12% лазеры'},{k:'rkt',l:'ROCKETS',d:'+12% ракеты'},{k:'arm',l:'ARMOR',d:'+8% HP'},{k:'crg',l:'CARGO',d:'+2 ячейки'},{k:'ens',l:'ENERGY SYS',d:'+10% EN'}];
+  const el=document.getElementById('skc');el.innerHTML='';
+  for(const sk of sks){const b=document.createElement('button');b.className='sk-btn';b.innerHTML=`<b style="color:#d4c040">${sk.l}</b> <span style="color:#a09040">LV${p.sk[sk.k]}</span><br><span style="opacity:.7">${sk.d}</span>`;b.onclick=()=>{p.sk[sk.k]++;p.skillPts--;calcStats();if(p.skillPts>0)renderSkills();else document.getElementById('overlay-lvl').style.display='none';notify('Прокачано: '+sk.l);};el.appendChild(b);}
+  document.getElementById('skpts').textContent='Очков: '+p.skillPts;
+}
+function updHUD(){
+  const p=G.p;
+  const el=id=>document.getElementById(id);
+  if(el('h-lvl'))el('h-lvl').textContent=p.lvl;
+  if(el('h-xp'))el('h-xp').textContent=p.xp+'/'+p.xpNext;
+  if(el('h-cr'))el('h-cr').textContent=p.cr;
+  if(el('h-hp'))el('h-hp').textContent=Math.ceil(p.hp)+'/'+p.maxHp;
+  if(el('h-en'))el('h-en').textContent=Math.ceil(p.en)+'/'+p.maxEn;
+  if(el('bhp'))el('bhp').style.width=(p.hp/p.maxHp*100)+'%';
+  if(el('ben'))el('ben').style.width=(p.en/p.maxEn*100)+'%';
+  updQuestHUD();
+}
+ 
+// ═══════════════════════════════════
+// MAIN LOOP
+// ═══════════════════════════════════
+function startGame(){
+ // Инициализация 3D-сцены
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gc'), antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
 
-  // 8. Таймер динамического спавна новых мобов в секторе
-  if (now - lastSpawnTime >= 2500) {
-    triggerSpawn();
-    lastSpawnTime = now;
-  }
+// Базовый свет
+const light = new THREE.DirectionalLight(0xffffff, 1);
+light.position.set(5, 5, 5);
+scene.add(light);
+scene.add(new THREE.AmbientLight(0x404040));
 
-  // 9. Отрисовка всех объектов на 3D сцене Three.js
-  sync3DObjects();
+camera.position.z = 5;
+  const sv=loadGame();
+  if(sv&&sv.p){Object.assign(G.p,sv.p);G.p.enSl=G.p.enSl||[null,null,null,null];G.p.arSl=G.p.arSl||[null,null];G.p.inv=G.p.inv||[];G.p.sk=G.p.sk||{bal:0,enw:0,rkt:0,arm:0,crg:0,ens:0};G.zone=sv.zone||0;}
+  G.p.w[0]=G.p.w[0]||'p1';G.quest=null;G.started=true;G.saveTimer=30;
+  document.getElementById('overlay-start').style.display='none';
+  CHUNKS.clear();genWorld();calcStats();requestAnimationFrame(loop);
+}
+function loop(ts){
+  if(!G.started){requestAnimationFrame(loop);return;}
   renderer.render(scene, camera);
+  const dt=Math.min((ts-G.lastT)/1000,.05);G.lastT=ts;
+  C.width=C.parentElement.clientWidth;C.height=C.parentElement.clientHeight;
+  updCam();update(dt);drawWorld();
+  for(const pt of G.portals)drawPortal(pt);const ents=[
+  ...G.mons.filter(m=>!m.dead||(m.deathAnim&&m.deathAnim<1)).map(m=>({t:'m',o:m,s:m.wx+m.wy})),...G.npcs.map(n=>({t:'n',o:n,s:n.wx+n.wy})),{t:'p',o:G.p,s:G.p.wx+G.p.wy},...(G.boss&&!G.boss.dead?[{t:'b',o:G.boss,s:G.boss.wx+G.boss.wy}]:[])].sort((a,b)=>a.s-b.s);
+  for(const e of ents){if(e.t==='m')drawMonsterSprite(e.o);else if(e.t==='n')drawNPCSprite(e.o);else if(e.t==='p')drawPlayerSprite(G.p.wx,G.p.wy,G.p.facing,G.p.walk,G.p.mech);else if(e.t==='b')drawBossSprite();}
+  for(const tr of G.turrets)drawTurretSprite(tr);
+  for(const pr of G.projs)drawProjectile(pr);
+  for(const pt of G.parts)drawParticle(pt);
+  ctx.globalAlpha=1;ctx.shadowBlur=0;
+  drawHUDCanvas();drawMinimap();
+  requestAnimationFrame(loop);
+}
+ 
+// ═══════════════════════════════════
+// PANELS
+// ═══════════════════════════════════
+let curTab='inv';
+function op(tab){document.getElementById('panel').style.display='flex';sw(tab||curTab);}
+function sw(tab){curTab=tab;['inv','mech','shop','quest'].forEach(t=>{const el=document.getElementById('t-'+t);if(el)el.classList.toggle('on',t===tab);});if(tab==='inv')rInv();else if(tab==='mech')rMech();else if(tab==='quest')rQuests();else rShop(shopTab);}
+function cp(){document.getElementById('panel').style.display='none';}
+ 
+function rInv(){
+  const p=G.p,b=document.getElementById('pbody');let h='';
+  const loot=p.inv.filter(x=>x.type==='loot');
+  h+=`<div class="psec">📦 Лут (${loot.length} шт.)</div>`;
+  if(!loot.length)h+=`<div style="font-size:10px;color:#8a7840;padding:10px;text-align:center">Нет лута — убивай монстров!</div>`;
+  else{
+    const cnt={};for(const it of loot)cnt[it.name]=(cnt[it.name]||[]).concat(it);
+    for(const[nm,its]of Object.entries(cnt)){const pr=its[0].price||LOOT_P[nm]||20;h+=`<div class="invrow"><div style="flex:1"><div class="irvname">${nm} ×${its.length}</div><div class="irvstat">${pr} CR за шт.</div></div><button class="irvbtn sbtn" onclick="sLN('${nm}')">ПРОДАТЬ</button></div>`;}
+    h+=`<button style="width:100%;margin-top:6px;padding:10px;border:none;background:linear-gradient(135deg,#c09030,#806010);color:#fff;font-weight:bold;border-radius:10px;cursor:pointer;font-size:10px;box-shadow:0 4px 12px #c0903055" onclick="sAll()">💰 ПРОДАТЬ ВЕСЬ ЛУТ</button>`;
+  }
+  const gear=p.inv.filter(x=>x.type!=='loot');
+  h+=`<div class="psec">⚙ Снаряжение (${gear.length})</div>`;
+  if(!gear.length)h+=`<div style="font-size:10px;color:#8a7840;padding:10px;text-align:center">Пусто — сними с меха в разделе МЕХ</div>`;
+  for(const item of gear){let stat='',canEq=false,sp=0;if(item.type==='weapon'){const w=WEAPONS.find(x=>x.id===item.id);if(w){stat=w.t+' D:'+w.dmg;canEq=p.lvl>=w.lv;sp=w.sell;}}else if(item.type==='module'){const m=MODULES.find(x=>x.id===item.id);if(m){stat=m.d;canEq=p.lvl>=m.lv;sp=m.sell;}}else if(item.type==='mech'){const mc=MECHS.find(x=>x.id===item.id);if(mc){stat='HP:'+mc.bhp;canEq=p.lvl>=mc.lv;sp=mc.sell;}}
+    h+=`<div class="invrow"><div style="flex:1"><div class="irvname">${item.name||item.id}</div><div class="irvstat">${stat}</div></div>${canEq?`<button class="irvbtn ebtn" onclick="eqInv('${item.id}','${item.type}')">ОДЕТЬ</button>`:''}<button class="irvbtn sbtn" onclick="sGear('${item.id}','${item.type}')">ПРОД. ${sp}</button></div>`;}
+  b.innerHTML=h;
+}
+function sLN(nm){const idx=G.p.inv.findIndex(x=>x.type==='loot'&&x.name===nm);if(idx===-1)return;const pr=G.p.inv[idx].price||LOOT_P[nm]||20;G.p.inv.splice(idx,1);G.p.cr+=pr;notify('+'+pr+' CR');updHUD();rInv();}
+function sAll(){let t=0;G.p.inv=G.p.inv.filter(x=>{if(x.type==='loot'){t+=x.price||LOOT_P[x.name]||20;return false;}return true;});G.p.cr+=t;notify('Продано! +'+t+' CR');updHUD();rInv();}
+function sGear(id,type){const arr=type==='weapon'?WEAPONS:type==='module'?MODULES:MECHS;const def=arr.find(x=>x.id===id);const pr=def?def.sell:10;const idx=G.p.inv.findIndex(x=>x.id===id&&x.type===type);if(idx===-1)return;G.p.inv.splice(idx,1);G.p.cr+=pr;notify('+'+pr+' CR');updHUD();rInv();}
+function eqInv(id,type){if(type==='weapon'){const sl=G.p.w.indexOf(null);if(sl===-1)return notify('Слоты заняты!');const idx=G.p.inv.findIndex(x=>x.id===id&&x.type==='weapon');if(idx===-1)return;G.p.inv.splice(idx,1);G.p.w[sl]=id;calcStats();notify('✓ Экипировано!');rInv();}else if(type==='module'){const m=MODULES.find(x=>x.id===id);const arr=m.sl==='en'?G.p.enSl:G.p.arSl;const sl=arr.indexOf(null);if(sl===-1)return notify('Слоты заняты!');const idx=G.p.inv.findIndex(x=>x.id===id&&x.type==='module');if(idx===-1)return;G.p.inv.splice(idx,1);arr[sl]=id;calcStats();notify('✓ Установлено!');rInv();}else if(type==='mech'){const idx=G.p.inv.findIndex(x=>x.id===id&&x.type==='mech');if(idx===-1)return;G.p.inv.splice(idx,1);G.p.mech=id;calcStats();notify('✓ Мех активирован!');rInv();}}
+ 
+function rMech(){
+  const p=G.p,b=document.getElementById('pbody');
+  let h=`<div class="psec">🔫 Оружие (2 слота)</div><div style="display:flex;gap:6px;margin-bottom:8px">`;
+  for(let i=0;i<2;i++){const w=p.w[i]?WEAPONS.find(x=>x.id===p.w[i]):null;h+=`<div class="mslot sw" onclick="rmW(${i})">${w?`<span style="font-size:7px;font-weight:bold">${w.n}</span><br><span style="font-size:6px;color:#903010">${w.t.toUpperCase()}</span><br><span style="font-size:6px;color:#c06040">[нажми — снять]</span>`:`<span style="font-size:20px">＋</span><br><span style="font-size:7px">оружие</span>`}</div>`;}
+  h+=`</div><div class="psec">⚡ Энергия (4 слота)</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">`;
+  for(let i=0;i<4;i++){const m=p.enSl[i]?MODULES.find(x=>x.id===p.enSl[i]):null;h+=`<div class="mslot se" onclick="rmM('en',${i})">${m?`<span style="font-size:7px;font-weight:bold">${m.n}</span><br><span style="font-size:6px;color:#103080">${m.d}</span><br><span style="font-size:6px;color:#2060a0">[снять]</span>`:`<span style="font-size:20px">＋</span><br><span style="font-size:7px">ген/батарея</span>`}</div>`;}
+  h+=`</div><div class="psec">🛡 Броня / Трюм (2 слота)</div><div style="display:flex;gap:6px;margin-bottom:10px">`;
+  for(let i=0;i<2;i++){const m=p.arSl[i]?MODULES.find(x=>x.id===p.arSl[i]):null;h+=`<div class="mslot sa" onclick="rmM('ar',${i})">${m?`<span style="font-size:7px;font-weight:bold">${m.n}</span><br><span style="font-size:6px;color:#604010">${m.d}</span><br><span style="font-size:6px;color:#906030">[снять]</span>`:`<span style="font-size:20px">＋</span><br><span style="font-size:7px">броня/трюм</span>`}</div>`;}
+  const mc=MECHS.find(m=>m.id===p.mech);
+  h+=`</div><div class="psec">📊 Характеристики</div>`;
+  h+=`<div style="background:linear-gradient(135deg,#ffffff,#f4f0e0);border:1px solid #d4c890;border-radius:12px;padding:12px;box-shadow:0 4px 12px #00000015">`;
+  h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:10px">`;
+  h+=`<div style="padding:6px;background:#f0f8e0;border-radius:8px;border:1px solid #a0c060"><div style="color:#6a7840;font-size:8px">МЕХ</div><div style="font-weight:bold;color:#304010">${mc.n}</div></div>`;
+  h+=`<div style="padding:6px;background:#e8f0ff;border-radius:8px;border:1px solid #6090c0"><div style="color:#406080;font-size:8px">EN REGEN</div><div style="font-weight:bold;color:#203060">${p.enRegen}/с</div></div>`;
+  h+=`<div style="padding:6px;background:#ffe8e8;border-radius:8px;border:1px solid #c07060"><div style="color:#804030;font-size:8px">HP</div><div style="font-weight:bold;color:#602010">${Math.ceil(p.hp)} / ${p.maxHp}</div></div>`;
+  h+=`<div style="padding:6px;background:#e8f4ff;border-radius:8px;border:1px solid #5088b0"><div style="color:#305878;font-size:8px">ENERGY</div><div style="font-weight:bold;color:#103858">${Math.ceil(p.en)} / ${p.maxEn}</div></div>`;
+  h+=`<div style="padding:6px;background:#fff8e0;border-radius:8px;border:1px solid #c0a040"><div style="color:#806020;font-size:8px">ТРЮМ</div><div style="font-weight:bold;color:#504010">${p.inv.length} / ${p.invMax}</div></div>`;
+  h+=`<div style="padding:6px;background:#f8f0ff;border-radius:8px;border:1px solid #a080c0"><div style="color:#604080;font-size:8px">УРОВЕНЬ</div><div style="font-weight:bold;color:#402060">LVL ${p.lvl}</div></div>`;
+  h+=`</div>`;
+  h+=`<div style="margin-top:8px;font-size:8px;color:#806040;font-family:'Courier New',monospace">NAV:${p.sk.bal} ENW:${p.sk.enw} RKT:${p.sk.rkt} ARM:${p.sk.arm} CRG:${p.sk.crg} ENS:${p.sk.ens}</div>`;
+  h+=`</div>`;
+  if(p.skillPts>0)h+=`<button style="width:100%;margin-top:8px;padding:12px;border:none;background:linear-gradient(135deg,#c09030,#806010);color:#fff;font-weight:bold;border-radius:12px;cursor:pointer;font-size:11px;box-shadow:0 4px 16px #c0903066" onclick="document.getElementById('panel').style.display='none';document.getElementById('overlay-lvl').style.display='flex';renderSkills()">⚡ РАСПРЕДЕЛИТЬ ${p.skillPts} ОЧКОВ</button>`;
+  b.innerHTML=h;
+}
+function rmW(i){const id=G.p.w[i];if(!id)return;const w=WEAPONS.find(x=>x.id===id);if(G.p.inv.length<G.p.invMax){G.p.inv.push({type:'weapon',id,name:w.n});G.p.w[i]=null;calcStats();notify('→ инвентарь');}else notify('Инвентарь полон!');rMech();}
+function rmM(t,i){const arr=t==='en'?G.p.enSl:G.p.arSl;const id=arr[i];if(!id)return;const m=MODULES.find(x=>x.id===id);if(G.p.inv.length<G.p.invMax){G.p.inv.push({type:'module',id,name:m.n});arr[i]=null;calcStats();notify('→ инвентарь');}else notify('Инвентарь полон!');rMech();}
+ 
+let shopTab='ballistic';
+function rShop(tab){
+  if(tab)shopTab=tab;
+  const p=G.p,b=document.getElementById('pbody');
+  const nearTrader=G.npcs.some(n=>n.type==='trader'&&Math.hypot(G.p.wx-n.wx,G.p.wy-n.wy)<16);
+  const nearMechanic=G.npcs.some(n=>n.type==='mechanic'&&Math.hypot(G.p.wx-n.wx,G.p.wy-n.wy)<16);
+  if(!nearTrader&&!nearMechanic){
+    b.innerHTML=`<div style="text-align:center;padding:40px 20px"><div style="font-size:50px;margin-bottom:12px">🏪</div><div style="font-size:14px;color:#604010;font-weight:bold;margin-bottom:8px">Никого рядом</div><div style="font-size:10px;color:#8a7840">Войди в Безопасную Зону.<br>🟢 Торговец — покупка/продажа<br>🔵 Механик — ремонт меха<br>🟡 Квестодатель — задания</div></div>`;return;
+  }
+  let h='';
+  // MECHANIC section
+  if(nearMechanic){
+    const cost=repairCost();const full=p.hp>=p.maxHp;
+    h+=`<div style="background:linear-gradient(135deg,#e0f0ff,#c8e4f8);border:2px solid #2080c0;border-radius:12px;padding:10px 12px;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:bold;color:#103060;margin-bottom:3px">🔧 МЕХАНИК</div>
+      <div style="font-size:10px;color:#204870;margin-bottom:6px">HP: ${Math.ceil(p.hp)} / ${p.maxHp} ${full?'<span style="color:#20a040">✓ Полный</span>':''}</div>
+      ${full?'<div style="font-size:10px;color:#408040">Мех в порядке!</div>':`<button onclick="tryRepair()" style="width:100%;padding:8px;border:none;background:linear-gradient(135deg,#2080c0,#103060);color:#fff;font-weight:bold;border-radius:8px;cursor:pointer;font-size:11px">🔧 ПОЧИНИТЬ — ${cost} CR</button>`}
+    </div>`;
+  }
+  if(!nearTrader){b.innerHTML=h;return;}
+  // SHOP header
+  h+=`<div style="background:linear-gradient(135deg,#fff8e0,#f4e8a0);border:1px solid #c8a830;border-radius:10px;padding:8px 12px;margin-bottom:8px"><div style="font-size:11px;color:#604010;font-weight:bold">💰 ${p.cr} CR &nbsp;|&nbsp; LVL ${p.lvl}</div></div>`;
+  // SHOP TABS
+  const tabs=[['ballistic','🔫 Огнестрел'],['energy','⚡ Энергия'],['rocket','🚀 Ракеты'],['modules','🔧 Модули'],['mechs','🤖 Мехи']];
+  h+=`<div style="display:flex;gap:3px;margin-bottom:8px;flex-wrap:wrap">`;
+  for(const[tid,tlabel]of tabs){
+    const active=shopTab===tid;
+    h+=`<button onclick="rShop('${tid}')" style="padding:5px 8px;border:none;border-radius:6px;font-size:8px;cursor:pointer;font-weight:bold;
+      background:${active?'linear-gradient(135deg,#d4a030,#905010)':'linear-gradient(135deg,#e8e4d0,#d4c890)'};
+      color:${active?'#fff':'#604010'};box-shadow:${active?'0 2px 6px #d4a03055':''}">${tlabel}</button>`;
+  }
+  h+=`</div>`;
+  const mkC=(item,type,can,lk,buyFn)=>{
+    return`<div class="icard ${lk?'locked':''}" onclick="${can?buyFn:'void 0'}">
+      <span class="ilvl ${lk?'no':'ok'}">LV${item.lv}</span>
+      <div class="iname">${item.n||item.name}</div>
+      <div class="istat">${type==='w'?item.t.toUpperCase()+' · D:'+item.dmg+' · R:'+item.rng+' · ROF:'+item.rof+' · EN:'+item.ec+'<br>'+item.d:item.d}</div>
+      <div class="iprice">${item.p===0?'<span style="color:#40a020;font-weight:bold">БЕСПЛАТНО</span>':item.p+' CR'}
+        ${lk?`<span style="color:#c03020"> 🔒LV${item.lv}</span>`:can?`<span style="color:#408020;font-weight:bold"> → КУПИТЬ</span>`:`<span style="color:#907030"> Мало CR</span>`}
+      </div></div>`;
+  };
+  if(shopTab==='ballistic'){
+    h+=`<div class="psec">🔫 Огнестрельное оружие</div>`;
+    for(const w of WEAPONS.filter(x=>x.t==='ballistic'&&!x.unique)){
+      const lk=p.lvl<w.lv,can=!lk&&p.cr>=w.p;
+      h+=mkC(w,'w',can,lk,`sW('${w.id}')`);
+    }
+  } else if(shopTab==='energy'){
+    h+=`<div class="psec">⚡ Энергетическое оружие</div>`;
+    for(const w of WEAPONS.filter(x=>x.t==='energy'&&!x.unique)){
+      const lk=p.lvl<w.lv,can=!lk&&p.cr>=w.p;
+      h+=mkC(w,'w',can,lk,`sW('${w.id}')`);
+    }
+  } else if(shopTab==='rocket'){
+    h+=`<div class="psec">🚀 Ракетное оружие</div>`;
+    for(const w of WEAPONS.filter(x=>x.t==='rocket'&&!x.unique)){
+      const lk=p.lvl<w.lv,can=!lk&&p.cr>=w.p;
+      h+=mkC(w,'w',can,lk,`sW('${w.id}')`);
+    }
+  } else if(shopTab==='modules'){
+    h+=`<div class="psec">🔋 Батареи</div>`;
+    for(const m of MODULES.filter(x=>x.sl==='en'&&x.eg===0)){
+      const lk=p.lvl<m.lv,can=!lk&&p.cr>=m.p;h+=mkC(m,'m',can,lk,`sM('${m.id}')`);
+    }
+    h+=`<div class="psec">⚡ Генераторы</div>`;
+    for(const m of MODULES.filter(x=>x.sl==='en'&&x.eg>0)){
+      const lk=p.lvl<m.lv,can=!lk&&p.cr>=m.p;h+=mkC(m,'m',can,lk,`sM('${m.id}')`);
+    }
+    h+=`<div class="psec">🛡 Броня (снижение урона)</div>`;
+    for(const m of MODULES.filter(x=>x.sl==='ar'&&x.dr>0)){
+      const lk=p.lvl<m.lv,can=!lk&&p.cr>=m.p;h+=mkC(m,'m',can,lk,`sM('${m.id}')`);
+    }
+    h+=`<div class="psec">📦 Грузовые отсеки</div>`;
+    for(const m of MODULES.filter(x=>x.sl==='ar'&&x.inv>0)){
+      const lk=p.lvl<m.lv,can=!lk&&p.cr>=m.p;h+=mkC(m,'m',can,lk,`sM('${m.id}')`);
+    }
+  } else if(shopTab==='mechs'){
+    h+=`<div class="psec">🤖 Мехи</div>`;
+    for(const mc of MECHS){
+      const own=p.mech===mc.id;const lk=p.lvl<mc.lv;const can=!own&&!lk&&(mc.p===0||p.cr>=mc.p);
+      h+=`<div class="icard ${own?'owned':''} ${lk?'locked':''}" onclick="${can?`sMc('${mc.id}')`:'void 0'}">
+        <span class="ilvl ${lk?'no':'ok'}">LV${mc.lv}</span>
+        <div class="iname">${mc.n}${own?' ✓ (активен)':''}</div>
+        <div class="istat">${mc.d} · Базовый HP: ${mc.bhp}</div>
+        <div class="iprice">${mc.p===0?'<span style="color:#40a020;font-weight:bold">БЕСПЛАТНО</span>':mc.p+' CR'}
+          ${lk?`<span style="color:#c03020"> 🔒LV${mc.lv}</span>`:can?`<span style="color:#408020;font-weight:bold"> → КУПИТЬ</span>`:own?`<span style="color:#808040"> ✓ Активен</span>`:`<span style="color:#907030"> Мало CR</span>`}
+        </div></div>`;
+    }
+  }
+  b.innerHTML=h;
+}
+function sW(id){const p=G.p,w=WEAPONS.find(x=>x.id===id);if(p.cr<w.p)return notify('Мало CR!');p.cr-=w.p;const sl=p.w.indexOf(null);if(sl!==-1){p.w[sl]=id;calcStats();notify('✓ '+w.n);}else if(p.inv.length<p.invMax){p.inv.push({type:'weapon',id,name:w.n});notify('→ инвентарь: '+w.n);}else{p.cr+=w.p;return notify('Нет места!');}updHUD();rShop();}
+function sM(id){const p=G.p,m=MODULES.find(x=>x.id===id);if(p.cr<m.p)return notify('Мало CR!');p.cr-=m.p;const arr=m.sl==='en'?p.enSl:p.arSl;const sl=arr.indexOf(null);if(sl!==-1){arr[sl]=id;calcStats();notify('✓ '+m.n);}else if(p.inv.length<p.invMax){p.inv.push({type:'module',id,name:m.n});notify('→ инвентарь: '+m.n);}else{p.cr+=m.p;return notify('Нет места!');}updHUD();rShop();}
+function sMc(id){const p=G.p,mc=MECHS.find(x=>x.id===id);if(p.cr<mc.p)return notify('Мало CR!');p.cr-=mc.p;p.mech=id;calcStats();notify('✓ '+mc.n);updHUD();rShop();}
+ 
+// ═══════════════════════════════════
+// AUTO BATTLE TOGGLE
+// ═══════════════════════════════════
+function toggleAuto(){
+  G.autoBattle=!G.autoBattle;
+  const btn=document.getElementById('auto-btn');
+  const state=document.getElementById('auto-state');
+  if(G.autoBattle){
+    btn.className='on';
+    if(state)state.textContent='ВКЛ';
+    notify('🤖 Автобой ВКЛ');
+  } else {
+    btn.className='off';
+    if(state)state.textContent='ВЫКЛ';
+    notify('🤖 Автобой ВЫКЛ');
+  }
+}
+ 
+// ═══════════════════════════════════
+// REPAIR (Mechanic NPC)
+// ═══════════════════════════════════
+function tryRepair(){
+  const p=G.p;
+  if(p.hp>=p.maxHp)return notify('HP полный — ремонт не нужен!');
+  const cost=repairCost();
+  if(p.cr<cost)return notify('Мало CR! Нужно '+cost+' CR');
+  p.cr-=cost;p.hp=p.maxHp;
+  notify('🔧 МЕХ ВОССТАНОВЛЕН! -'+cost+' CR');updHUD();
+}
+ 
+// ═══════════════════════════════════
+// BIG MAP
+// ═══════════════════════════════════
+let bigmapOpen=false;
+// Minimap bounds on screen (set by drawMinimap)
+let MM_X=0,MM_Y=0,MM_W=82,MM_H=82;
+ 
+function handleCanvasClick(e){
+  if(!G.started)return;
+  const rect=C.getBoundingClientRect();
+  const cx=e.clientX-rect.left,cy=e.clientY-rect.top;
+  // check if click is inside minimap
+  if(cx>=MM_X&&cx<=MM_X+MM_W&&cy>=MM_Y&&cy<=MM_Y+MM_H){
+    openBigmap();
+    e.stopPropagation();
+    return;
+  }
+  // check mechanic NPC proximity tap
+  for(const n of G.npcs){
+    if(n.type==='mechanic'){
+      const d=Math.hypot(G.p.wx-n.wx,G.p.wy-n.wy);
+      if(d<15)tryRepair();
+    }
+  }
+}
+ 
+function openBigmap(){
+  const overlay=document.getElementById('bigmap');
+  if(!overlay)return;
+  overlay.style.display='flex';bigmapOpen=true;
+  renderBigmap();
+}
+ 
+function closeBigmap(){
+  const overlay=document.getElementById('bigmap');
+  if(overlay)overlay.style.display='none';
+  bigmapOpen=false;
+}
+ 
+function renderBigmap(){
+  const bc=document.getElementById('bigmap-canvas');
+  if(!bc)return;
+  const cw=window.innerWidth*0.92;
+  const ch=window.innerHeight*0.72;
+  bc.width=Math.min(cw,500);bc.height=Math.min(ch,500);
+  const bctx=bc.getContext('2d');
+  const bw=bc.width,bh=bc.height;
+  const scx=bw/WW,scy=bh/WH;
+  const z=ZONES[G.zone];
+ 
+  // background
+  bctx.fillStyle=z.ground||'#3a3820';bctx.fillRect(0,0,bw,bh);
+ 
+  // draw terrain sample (walls/water/safe zone)
+  const step=4; // sample every 4 tiles for performance
+  for(let ty=0;ty<WH;ty+=step){
+    for(let tx=0;tx<WW;tx+=step){
+      const t=getTile(tx,ty);
+      if(t==='wall'){bctx.fillStyle='#606048aa';bctx.fillRect(tx*scx,ty*scy,step*scx+1,step*scy+1);}
+      else if(t==='water'){bctx.fillStyle='#1a3050aa';bctx.fillRect(tx*scx,ty*scy,step*scx+1,step*scy+1);}
+      else if(t==='rock'){bctx.fillStyle='#50483888';bctx.fillRect(tx*scx,ty*scy,step*scx+1,step*scy+1);}
+    }
+  }
+ 
+  // safe zone
+  bctx.fillStyle='#40a02055';bctx.fillRect(SZ_X*scx,SZ_Y*scy,SZ_W*scx,SZ_H*scy);
+  bctx.strokeStyle='#80e040bb';bctx.lineWidth=2;bctx.strokeRect(SZ_X*scx,SZ_Y*scy,SZ_W*scx,SZ_H*scy);
+  bctx.fillStyle='#80e040';bctx.font='bold 10px Courier New';bctx.textAlign='center';bctx.textBaseline='middle';
+  bctx.fillText('🛡 БЗ',(SZ_X+SZ_W/2)*scx,(SZ_Y+SZ_H/2)*scy);
+ 
+  // portals
+  for(const p of G.portals){
+    bctx.fillStyle=p.col;bctx.shadowColor=p.col;bctx.shadowBlur=8;
+    bctx.beginPath();bctx.arc(p.wx*scx,p.wy*scy,6,0,Math.PI*2);bctx.fill();bctx.shadowBlur=0;
+    bctx.fillStyle='#fff';bctx.font='8px Courier New';bctx.textAlign='center';bctx.textBaseline='bottom';
+    bctx.fillText(p.back?'← НАЗАД':'→ '+ZONES[p.toZone].name,p.wx*scx,p.wy*scy-7);
+  }
+ 
+  // boss
+  if(G.boss&&!G.boss.dead){
+    bctx.fillStyle='#ff3030';bctx.shadowColor='#ff3030';bctx.shadowBlur=12;
+    bctx.beginPath();bctx.arc(G.boss.wx*scx,G.boss.wy*scy,8,0,Math.PI*2);bctx.fill();bctx.shadowBlur=0;
+    bctx.fillStyle='#ff8080';bctx.font='bold 8px Courier New';bctx.textAlign='center';bctx.textBaseline='bottom';
+    bctx.fillText('☠ '+G.boss.name,G.boss.wx*scx,G.boss.wy*scy-10);
+  }
+ 
+  // monsters (dots)
+  for(const m of G.mons){
+    if(m.dead||m.hp<=0)continue;
+    bctx.fillStyle=m.tier===2?'#ff3030':m.tier===1?'#4488ff':'#e07020';
+    bctx.beginPath();bctx.arc(m.wx*scx,m.wy*scy,m.tier>0?2.5:1.5,0,Math.PI*2);bctx.fill();
+  }
+ 
+  // player
+  bctx.fillStyle='#d4c040';bctx.shadowColor='#d4c040';bctx.shadowBlur=10;
+  bctx.beginPath();bctx.arc(G.p.wx*scx,G.p.wy*scy,6,0,Math.PI*2);bctx.fill();bctx.shadowBlur=0;
+  bctx.strokeStyle='#ffffff';bctx.lineWidth=1.5;
+  bctx.beginPath();bctx.arc(G.p.wx*scx,G.p.wy*scy,6,0,Math.PI*2);bctx.stroke();
+ 
+  // legend
+  const lx=8,ly=bh-60;
+  bctx.fillStyle='#000000aa';bctx.fillRect(lx-4,ly-4,130,58);
+  bctx.font='9px Courier New';
+  bctx.fillStyle='#d4c040';bctx.fillText('● Ты',lx+8,ly+10);
+  bctx.fillStyle='#ff3030';bctx.fillText('● Босс',lx+8,ly+22);
+  bctx.fillStyle='#e07020';bctx.fillText('● Монстры',lx+8,ly+34);
+  bctx.fillStyle=z.acc;bctx.fillText('● Портал',lx+8,ly+46);
+ 
+  // zone label
+  bctx.fillStyle='rgba(0,0,0,0.5)';bctx.fillRect(bw/2-70,4,140,20);
+  bctx.fillStyle=z.acc;bctx.font='bold 11px Courier New';bctx.textAlign='center';bctx.textBaseline='top';
+  bctx.fillText('КАРТА — '+z.name,bw/2,7);
+}
+ 
+// ═══════════════════════════════════
+// QUEST SYSTEM
+// ═══════════════════════════════════
+const QUEST_DEFS=[
+  // zone 0
+  {id:'q0_10',zone:0,name:'Чистильщик',   goal:'kill',cnt:10, reward:{cr:300,  xp:800},  desc:'Убить 10 монстров'},
+  {id:'q0_30',zone:0,name:'Охотник',      goal:'kill',cnt:30, reward:{cr:900,  xp:2500}, desc:'Убить 30 монстров'},
+  {id:'q0_50',zone:0,name:'Истребитель',  goal:'kill',cnt:50, reward:{cr:1800, xp:5000}, desc:'Убить 50 монстров'},
+  {id:'q0_b', zone:0,name:'Убить Стража', goal:'boss',cnt:1,  reward:{cr:5000, xp:15000},desc:'Уничтожить Стража Города'},
+  // zone 1
+  {id:'q1_10',zone:1,name:'Санитар',      goal:'kill',cnt:10, reward:{cr:800,  xp:2000}, desc:'Убить 10 монстров'},
+  {id:'q1_30',zone:1,name:'Мясник',       goal:'kill',cnt:30, reward:{cr:2500, xp:6500}, desc:'Убить 30 монстров'},
+  {id:'q1_50',zone:1,name:'Герой',        goal:'kill',cnt:50, reward:{cr:5000, xp:13000},desc:'Убить 50 монстров'},
+  {id:'q1_b', zone:1,name:'Убить Титана', goal:'boss',cnt:1,  reward:{cr:15000,xp:45000},desc:'Уничтожить Пустынного Титана'},
+  // zone 2
+  {id:'q2_10',zone:2,name:'Исследователь',goal:'kill',cnt:10, reward:{cr:2500, xp:6000}, desc:'Убить 10 монстров'},
+  {id:'q2_30',zone:2,name:'Разрушитель',  goal:'kill',cnt:30, reward:{cr:8000, xp:20000},desc:'Убить 30 монстров'},
+  {id:'q2_50',zone:2,name:'Легенда',      goal:'kill',cnt:50, reward:{cr:15000,xp:40000},desc:'Убить 50 монстров'},
+  {id:'q2_b', zone:2,name:'Конец Пустоты',goal:'boss',cnt:1,  reward:{cr:50000,xp:150000},desc:'Уничтожить Пустотного Колосса'},
+];
+ 
+function updQuestHUD(){
+  const qh=document.getElementById('quest-hud');
+  if(!G.quest){if(qh)qh.style.display='none';return;}
+  if(qh)qh.style.display='block';
+  const q=G.quest,d=q.def;
+  const prog=q.progress||0,total=d.cnt;
+  const pct=Math.min(100,Math.round(prog/total*100));
+  const el=id=>document.getElementById(id);
+  if(el('qhud-name'))el('qhud-name').textContent=(q.done?'✅ ':'📋 ')+d.name;
+  if(el('qhud-prog'))el('qhud-prog').textContent=q.done?'Выполнено! Сдай задание':prog+' / '+total+' ('+pct+'%)';
+  if(el('qhud-bar'))el('qhud-bar').style.width=pct+'%';
+}
+ 
+function rQuests(){
+  const p=G.p,b=document.getElementById('pbody');
+  const inSZ=inSafeZone(p.wx,p.wy);
+  const defs=QUEST_DEFS.filter(q=>q.zone===G.zone);
+  let h='';
+
+  // Header
+  h+=`<div style="background:linear-gradient(135deg,#fff8e0,#f4e060);border:2px solid #d4a030;
+    border-radius:12px;padding:10px 14px;margin-bottom:10px">
+    <div style="font-size:13px;font-weight:bold;color:#604010">📋 ЗАДАНИЯ — ${ZONES[G.zone].name}</div>
+    <div style="font-size:9px;color:#8a7040;margin-top:2px">${inSZ?'✅ Вы в безопасной зоне — можно брать и сдавать задания':'⚠️ Войди в безопасную зону чтобы брать/сдавать задания'}</div>
+  </div>`;
+
+  // Active quest block
+  if(G.quest&&G.quest.zone===G.zone){
+    const q=G.quest,d=q.def;
+    const prog=q.progress||0;
+    const pct=Math.min(100,Math.round(prog/d.cnt*100));
+    h+=`<div style="background:${q.done?'linear-gradient(135deg,#e8ffe8,#c0f0c0)':'linear-gradient(135deg,#e8f0ff,#d0e4f8)'};
+      border:2px solid ${q.done?'#30a030':'#3060b0'};border-radius:12px;padding:12px;margin-bottom:10px;
+      box-shadow:0 3px 10px ${q.done?'#30a03033':'#3060b033'}">
+      <div style="font-size:12px;font-weight:bold;color:${q.done?'#1a5010':'#102050'};margin-bottom:4px">
+        ${q.done?'✅':'⏳'} АКТИВНОЕ: ${d.name}
+      </div>
+      <div style="font-size:9px;color:#506040;margin-bottom:6px">${d.desc}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:11px;font-weight:bold;color:#304060">${prog} / ${d.cnt}</span>
+        <span style="font-size:10px;color:#406080">${pct}%</span>
+      </div>
+      <div style="width:100%;height:8px;background:#c0d0e0;border-radius:4px;overflow:hidden;margin-bottom:6px">
+        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#3060b0,#60a0f0);border-radius:4px;transition:width .3s"></div>
+      </div>
+      <div style="font-size:9px;color:#507040">Награда: 💰 ${d.reward.cr} CR &nbsp; ⭐ ${d.reward.xp} XP</div>
+      ${q.done?`<button onclick="handInQuest()" ${!inSZ?'disabled style="opacity:.4;cursor:not-allowed"':''} style="width:100%;margin-top:8px;padding:10px;border:none;
+        background:${inSZ?'linear-gradient(135deg,#208020,#104010)':'#808080'};
+        color:#fff;font-weight:bold;border-radius:8px;cursor:pointer;font-size:12px;
+        box-shadow:${inSZ?'0 3px 10px #20802055':'none'}">
+        🎁 ${inSZ?'СДАТЬ И ПОЛУЧИТЬ НАГРАДУ':'Нужна безопасная зона'}</button>`:''}
+    </div>`;
+  }
+
+  // Available quests
+  h+=`<div style="font-size:10px;font-weight:bold;color:#604010;margin:6px 0 6px">Доступные задания:</div>`;
+  for(const d of defs){
+    const isActive=G.quest&&G.quest.def.id===d.id&&G.quest.zone===G.zone;
+    const hasDiff=G.quest&&G.quest.zone===G.zone&&!G.quest.done&&!isActive;
+    const icon=d.goal==='boss'?'☠️':'⚔️';
+    h+=`<div style="background:${isActive?'linear-gradient(135deg,#dce8ff,#c8d8f0)':'linear-gradient(135deg,#fff,#f8f4e8)'};
+      border:2px solid ${isActive?'#4060c0':'#d4c890'};border-radius:12px;
+      padding:10px 12px;margin-bottom:8px;opacity:${hasDiff?.5:1}">
+      <div style="display:flex;align-items:flex-start;gap:8px">
+        <div style="font-size:22px;flex-shrink:0">${icon}</div>
+        <div style="flex:1">
+          <div style="font-size:11px;font-weight:bold;color:#302010">${d.name}</div>
+          <div style="font-size:9px;color:#8a7040;margin:2px 0">${d.desc}</div>
+          <div style="font-size:9px;color:#407040;margin-top:3px">💰 ${d.reward.cr} CR &nbsp; ⭐ ${d.reward.xp} XP</div>
+        </div>
+        <div style="flex-shrink:0;text-align:center">
+          ${isActive
+            ?`<div style="font-size:8px;color:#4060c0;font-weight:bold;background:#e0e8ff;
+                border-radius:6px;padding:4px 8px">АКТИВНО</div>`
+            :hasDiff
+              ?`<div style="font-size:8px;color:#907030;background:#f8f0d0;border-radius:6px;padding:4px 6px">Сначала<br>сдай</div>`
+              :`<button onclick="acceptQuest('${d.id}')"
+                ${!inSZ?'disabled style="opacity:.4;cursor:not-allowed"':''}
+                style="padding:8px 12px;border:none;
+                background:${inSZ?'linear-gradient(135deg,#d4a030,#905010)':'#b0a080'};
+                color:#fff;font-weight:bold;border-radius:8px;
+                cursor:${inSZ?'pointer':'not-allowed'};font-size:10px;
+                box-shadow:${inSZ?'0 2px 8px #d4a03055':'none'}">ВЗЯТЬ</button>`
+          }
+        </div>
+      </div>
+    </div>`;
+  }
+  b.innerHTML=h;
+}
+
+function acceptQuest(id){
+  if(!inSafeZone(G.p.wx,G.p.wy))return notify('⚠️ Задания только в безопасной зоне!');
+  const def=QUEST_DEFS.find(q=>q.id===id);
+  if(!def)return;
+  G.quest={def,zone:G.zone,progress:0,done:false};
+  notify('📋 Задание принято: '+def.name);
+  updQuestHUD();
+  rQuests();
+}
+
+function handInQuest(){
+  if(!G.quest||!G.quest.done)return notify('Задание ещё не выполнено!');
+  if(!inSafeZone(G.p.wx,G.p.wy))return notify('⚠️ Сдавать задания только в безопасной зоне!');
+  const d=G.quest.def;
+  G.p.cr+=d.reward.cr;
+  G.p.xp+=d.reward.xp;
+  if(G.p.xp>=G.p.xpNext)levelUp();
+  notify('🎁 НАГРАДА: +'+d.reward.cr+' CR  +'+d.reward.xp+' XP');
+  G.quest=null;
+  updQuestHUD();
+  updHUD();
+  rQuests();
 }
 
 // ═══════════════════════════════════
-// INITIALIZATION AND START TRIGGERS
+// NOTIFY
 // ═══════════════════════════════════
-window.addEventListener('DOMContentLoaded', () => {
-  // Проверяем наличие старых сохранений пилота в LocalStorage
-  const saved = loadGame();
-  if (saved && saved.p) {
-    G.p = { ...G.p, ...saved.p };
-    G.zone = saved.zone || 0;
-  }
-
-  // Разворачиваем 3D подсистему WebGL
-  init3DEngine();
-
-  // Запуск главного ядра
-  G.isRun = true;
-  G.lastTime = performance.now();
-  requestAnimationFrame(gameTick);
-
-  // Отрендерить дефолтные показатели интерфейсов
-  updateHUD();
-  selectTab('inv');
-
-  showNotif("ДОБРО ПОЖАЛОВАТЬ В IRON WASTES 3D! СИСТЕМЫ МЕХА СТАБИЛЬНЫ.");
-});
+let ntT=null;
+function notify(msg){const el=document.getElementById('notif');el.textContent=msg;el.style.opacity=1;clearTimeout(ntT);ntT=setTimeout(()=>el.style.opacity=0,2600);}
+ 
+// ═══════════════════════════════════
+// SAVE INFO
+// ═══════════════════════════════════
+(function(){const sv=loadGame();const si=document.getElementById('save-info');if(sv&&sv.ts){const d=new Date(sv.ts);si.textContent='💾 Сохранение: LVL '+sv.p.lvl+' от '+d.toLocaleDateString('ru');}else si.textContent='✨ Новая игра';})();
+ 
+// ═══════════════════════════════════
+// JOYSTICK
+// ═══════════════════════════════════
+const jb2=document.getElementById('jbase'),jk2=document.getElementById('jknob');
+let jA=false,jID=null,jO={x:0,y:0};const MJ=34;
+// bigmap bounds tracking
+// canvas touch → click handler for minimap
+C.addEventListener('touchend',function(e){
+  if(!G.started)return;
+  const t=e.changedTouches[0];if(!t)return;
+  const rect=C.getBoundingClientRect();
+  const cx=t.clientX-rect.left,cy=t.clientY-rect.top;
+  if(cx>=MM_X&&cx<=MM_X+MM_W&&cy>=MM_Y&&cy<=MM_Y+MM_H){e.preventDefault();openBigmap();return;}
+  // mechanic tap
+  for(const n of G.npcs){if(n.type==='mechanic'){const d=Math.hypot(G.p.wx-n.wx,G.p.wy-n.wy);if(d<15){tryRepair();return;}}}
+  // questgiver tap — handled via ЗАДАНИЯ tab in panel
+},{passive:false});
+document.getElementById('jpad').addEventListener('touchstart',e=>{e.preventDefault();const t=e.changedTouches[0];jID=t.identifier;jA=true;const r=jb2.getBoundingClientRect();jO={x:r.left+r.width/2,y:r.top+r.height/2};},{passive:false});
+document.addEventListener('touchmove',e=>{if(!jA)return;e.preventDefault();const t=Array.from(e.touches).find(t=>t.identifier===jID);if(!t)return;let dx=t.clientX-jO.x,dy=t.clientY-jO.y;const d=Math.hypot(dx,dy);if(d>MJ){dx=dx/d*MJ;dy=dy/d*MJ;}jk2.style.transform=`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px))`;G.jd={x:dx/MJ,y:dy/MJ};},{passive:false});
+document.addEventListener('touchend',e=>{if(!jA)return;const t=Array.from(e.changedTouches).find(t=>t.identifier===jID);if(!t)return;jA=false;jID=null;jk2.style.transform='translate(-50%,-50%)';G.jd={x:0,y:0};});
+document.addEventListener('keydown',e=>{if(e.key==='a'||e.key==='ArrowLeft')G.jd.x=-1;if(e.key==='d'||e.key==='ArrowRight')G.jd.x=1;if(e.key==='w'||e.key==='ArrowUp')G.jd.y=-1;if(e.key==='s'||e.key==='ArrowDown')G.jd.y=1;if(e.key==='1')ft(0,null);if(e.key==='2')ft(1,null);if(e.key==='e')op('shop');if(e.key==='q')op('mech');if(e.key==='i')op('inv');if(e.key==='Escape')cp();});
+document.addEventListener('keyup',e=>{if(e.key==='a'||e.key==='d'||e.key==='ArrowLeft'||e.key==='ArrowRight')G.jd.x=0;if(e.key==='w'||e.key==='s'||e.key==='ArrowUp'||e.key==='ArrowDown')G.jd.y=0;});
+</script>
+</body>
+</html>
