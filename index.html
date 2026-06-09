@@ -250,9 +250,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#1a1a0e;touch-action
   <!-- PANEL -->
   <div id="panel">
     <div id="ptabs">
-      <button class="ptab on" id="t-inv" onclick="sw('inv')">📦 ИНВЕНТАРЬ</button>
+      <button class="ptab on" id="t-inv" onclick="sw('inv')">📦 ИНВЕНТ.</button>
       <button class="ptab" id="t-mech" onclick="sw('mech')">⚙ МЕХ</button>
       <button class="ptab" id="t-shop" onclick="sw('shop')">🏪 МАГАЗИН</button>
+      <button class="ptab" id="t-quest" onclick="sw('quest')">📋 ЗАДАНИЯ</button>
       <button class="pcx" onclick="cp()">✕</button>
     </div>
     <div id="pbody"></div>
@@ -1470,7 +1471,7 @@ function loop(ts){
 // ═══════════════════════════════════
 let curTab='inv';
 function op(tab){document.getElementById('panel').style.display='flex';sw(tab||curTab);}
-function sw(tab){curTab=tab;['inv','mech','shop'].forEach(t=>document.getElementById('t-'+t).classList.toggle('on',t===tab));if(tab==='inv')rInv();else if(tab==='mech')rMech();else rShop(shopTab);}
+function sw(tab){curTab=tab;['inv','mech','shop','quest'].forEach(t=>{const el=document.getElementById('t-'+t);if(el)el.classList.toggle('on',t===tab);});if(tab==='inv')rInv();else if(tab==='mech')rMech();else if(tab==='quest')rQuests();else rShop(shopTab);}
 function cp(){document.getElementById('panel').style.display='none';}
  
 function rInv(){
@@ -1795,72 +1796,97 @@ function updQuestHUD(){
   if(el('qhud-bar'))el('qhud-bar').style.width=pct+'%';
 }
  
-function openQuests(){
-  // find questgiver proximity
-  const near=G.npcs.some(n=>n.type==='questgiver'&&Math.hypot(G.p.wx-n.wx,G.p.wy-n.wy)<16);
-  if(!near)return notify('Подойди к Квестодателю (🟡 NPC в безопасной зоне)');
-  showQuestPanel();
-}
- 
-function showQuestPanel(){
-  const p=G.p;
-  document.getElementById('panel').style.display='flex';
-  // Temporarily use panel with special content
-  document.getElementById('pnt')&&(document.getElementById('pnt').textContent='');
-  ['inv','mech','shop'].forEach(t=>{const el=document.getElementById('t-'+t);if(el)el.classList.remove('on');});
-  const b=document.getElementById('pbody');
+function rQuests(){
+  const p=G.p,b=document.getElementById('pbody');
+  const inSZ=inSafeZone(p.wx,p.wy);
   const defs=QUEST_DEFS.filter(q=>q.zone===G.zone);
-  let h=`<div style="background:linear-gradient(135deg,#fff8e0,#f4e060);border:2px solid #d4a030;border-radius:12px;padding:12px;margin-bottom:10px">
-    <div style="font-size:16px;font-weight:bold;color:#604010">📋 КВЕСТОДАТЕЛЬ</div>
-    <div style="font-size:10px;color:#8a7040;margin-top:4px">${ZONES[G.zone].name} · Зона ${G.zone+1}</div>
+  let h='';
+
+  // Header
+  h+=`<div style="background:linear-gradient(135deg,#fff8e0,#f4e060);border:2px solid #d4a030;
+    border-radius:12px;padding:10px 14px;margin-bottom:10px">
+    <div style="font-size:13px;font-weight:bold;color:#604010">📋 ЗАДАНИЯ — ${ZONES[G.zone].name}</div>
+    <div style="font-size:9px;color:#8a7040;margin-top:2px">${inSZ?'✅ Вы в безопасной зоне — можно брать и сдавать задания':'⚠️ Войди в безопасную зону чтобы брать/сдавать задания'}</div>
   </div>`;
- 
-  // Current quest status
+
+  // Active quest block
   if(G.quest&&G.quest.zone===G.zone){
     const q=G.quest,d=q.def;
     const prog=q.progress||0;
-    h+=`<div style="background:${q.done?'linear-gradient(135deg,#e0ffe0,#c0f0c0)':'linear-gradient(135deg,#e8f0ff,#d0e0f8)'};border:2px solid ${q.done?'#40a040':'#4060c0'};border-radius:12px;padding:12px;margin-bottom:10px">
-      <div style="font-size:12px;font-weight:bold;color:${q.done?'#206020':'#102060'}">${q.done?'✅':'⏳'} ТЕКУЩЕЕ: ${d.name}</div>
-      <div style="font-size:10px;color:#406040;margin:4px 0">${d.desc}</div>
-      <div style="font-size:11px;color:#303060;font-weight:bold">Прогресс: ${prog} / ${d.cnt}</div>
-      <div style="width:100%;height:8px;background:#ccc;border-radius:4px;margin:6px 0;overflow:hidden"><div style="height:100%;width:${Math.min(100,prog/d.cnt*100)}%;background:linear-gradient(90deg,#4060c0,#60a0f0);border-radius:4px"></div></div>
-      <div style="font-size:9px;color:#606080">Награда: ${d.reward.cr} CR + ${d.reward.xp} XP</div>
-      ${q.done?`<button onclick="handInQuest()" style="width:100%;margin-top:8px;padding:10px;border:none;background:linear-gradient(135deg,#208020,#104010);color:#fff;font-weight:bold;border-radius:8px;cursor:pointer;font-size:12px">🎁 СДАТЬ И ПОЛУЧИТЬ НАГРАДУ</button>`:''}
+    const pct=Math.min(100,Math.round(prog/d.cnt*100));
+    h+=`<div style="background:${q.done?'linear-gradient(135deg,#e8ffe8,#c0f0c0)':'linear-gradient(135deg,#e8f0ff,#d0e4f8)'};
+      border:2px solid ${q.done?'#30a030':'#3060b0'};border-radius:12px;padding:12px;margin-bottom:10px;
+      box-shadow:0 3px 10px ${q.done?'#30a03033':'#3060b033'}">
+      <div style="font-size:12px;font-weight:bold;color:${q.done?'#1a5010':'#102050'};margin-bottom:4px">
+        ${q.done?'✅':'⏳'} АКТИВНОЕ: ${d.name}
+      </div>
+      <div style="font-size:9px;color:#506040;margin-bottom:6px">${d.desc}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:11px;font-weight:bold;color:#304060">${prog} / ${d.cnt}</span>
+        <span style="font-size:10px;color:#406080">${pct}%</span>
+      </div>
+      <div style="width:100%;height:8px;background:#c0d0e0;border-radius:4px;overflow:hidden;margin-bottom:6px">
+        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#3060b0,#60a0f0);border-radius:4px;transition:width .3s"></div>
+      </div>
+      <div style="font-size:9px;color:#507040">Награда: 💰 ${d.reward.cr} CR &nbsp; ⭐ ${d.reward.xp} XP</div>
+      ${q.done?`<button onclick="handInQuest()" ${!inSZ?'disabled style="opacity:.4;cursor:not-allowed"':''} style="width:100%;margin-top:8px;padding:10px;border:none;
+        background:${inSZ?'linear-gradient(135deg,#208020,#104010)':'#808080'};
+        color:#fff;font-weight:bold;border-radius:8px;cursor:pointer;font-size:12px;
+        box-shadow:${inSZ?'0 3px 10px #20802055':'none'}">
+        🎁 ${inSZ?'СДАТЬ И ПОЛУЧИТЬ НАГРАДУ':'Нужна безопасная зона'}</button>`:''}
     </div>`;
   }
- 
-  h+=`<div style="font-size:11px;font-weight:bold;color:#604010;margin:8px 0 6px">Доступные задания:</div>`;
+
+  // Available quests
+  h+=`<div style="font-size:10px;font-weight:bold;color:#604010;margin:6px 0 6px">Доступные задания:</div>`;
   for(const d of defs){
-    const isActive=G.quest&&G.quest.def.id===d.id;
-    const hasDiff=G.quest&&G.quest.zone===G.zone&&!G.quest.done;
-    const disabled=hasDiff&&!isActive;
-    h+=`<div style="background:${isActive?'linear-gradient(135deg,#e8f0ff,#d0e0f8)':'linear-gradient(135deg,#fff,#f4f0e0)'};border:2px solid ${isActive?'#4060c0':'#d4c890'};border-radius:12px;padding:10px 12px;margin-bottom:8px;opacity:${disabled?.5:1}">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-size:11px;font-weight:bold;color:#302010">${d.goal==='boss'?'☠':'⚔'} ${d.name}</div>
-          <div style="font-size:9px;color:#8a7040;margin-top:2px">${d.desc}</div>
-          <div style="font-size:9px;color:#408040;margin-top:3px">💰 ${d.reward.cr} CR &nbsp; ⭐ ${d.reward.xp} XP</div>
+    const isActive=G.quest&&G.quest.def.id===d.id&&G.quest.zone===G.zone;
+    const hasDiff=G.quest&&G.quest.zone===G.zone&&!G.quest.done&&!isActive;
+    const icon=d.goal==='boss'?'☠️':'⚔️';
+    h+=`<div style="background:${isActive?'linear-gradient(135deg,#dce8ff,#c8d8f0)':'linear-gradient(135deg,#fff,#f8f4e8)'};
+      border:2px solid ${isActive?'#4060c0':'#d4c890'};border-radius:12px;
+      padding:10px 12px;margin-bottom:8px;opacity:${hasDiff?.5:1}">
+      <div style="display:flex;align-items:flex-start;gap:8px">
+        <div style="font-size:22px;flex-shrink:0">${icon}</div>
+        <div style="flex:1">
+          <div style="font-size:11px;font-weight:bold;color:#302010">${d.name}</div>
+          <div style="font-size:9px;color:#8a7040;margin:2px 0">${d.desc}</div>
+          <div style="font-size:9px;color:#407040;margin-top:3px">💰 ${d.reward.cr} CR &nbsp; ⭐ ${d.reward.xp} XP</div>
         </div>
-        ${isActive?`<div style="font-size:9px;color:#4060c0;font-weight:bold">АКТИВНО</div>`:
-          disabled?`<div style="font-size:9px;color:#908060">Сначала<br>сдай</div>`:
-          `<button onclick="acceptQuest('${d.id}')" style="padding:8px 12px;border:none;background:linear-gradient(135deg,#d4a030,#905010);color:#fff;font-weight:bold;border-radius:8px;cursor:pointer;font-size:10px">ВЗЯТЬ</button>`}
+        <div style="flex-shrink:0;text-align:center">
+          ${isActive
+            ?`<div style="font-size:8px;color:#4060c0;font-weight:bold;background:#e0e8ff;
+                border-radius:6px;padding:4px 8px">АКТИВНО</div>`
+            :hasDiff
+              ?`<div style="font-size:8px;color:#907030;background:#f8f0d0;border-radius:6px;padding:4px 6px">Сначала<br>сдай</div>`
+              :`<button onclick="acceptQuest('${d.id}')"
+                ${!inSZ?'disabled style="opacity:.4;cursor:not-allowed"':''}
+                style="padding:8px 12px;border:none;
+                background:${inSZ?'linear-gradient(135deg,#d4a030,#905010)':'#b0a080'};
+                color:#fff;font-weight:bold;border-radius:8px;
+                cursor:${inSZ?'pointer':'not-allowed'};font-size:10px;
+                box-shadow:${inSZ?'0 2px 8px #d4a03055':'none'}">ВЗЯТЬ</button>`
+          }
+        </div>
       </div>
     </div>`;
   }
   b.innerHTML=h;
 }
- 
+
 function acceptQuest(id){
+  if(!inSafeZone(G.p.wx,G.p.wy))return notify('⚠️ Задания только в безопасной зоне!');
   const def=QUEST_DEFS.find(q=>q.id===id);
   if(!def)return;
   G.quest={def,zone:G.zone,progress:0,done:false};
   notify('📋 Задание принято: '+def.name);
   updQuestHUD();
-  showQuestPanel();
+  rQuests();
 }
- 
+
 function handInQuest(){
   if(!G.quest||!G.quest.done)return notify('Задание ещё не выполнено!');
+  if(!inSafeZone(G.p.wx,G.p.wy))return notify('⚠️ Сдавать задания только в безопасной зоне!');
   const d=G.quest.def;
   G.p.cr+=d.reward.cr;
   G.p.xp+=d.reward.xp;
@@ -1869,9 +1895,9 @@ function handInQuest(){
   G.quest=null;
   updQuestHUD();
   updHUD();
-  showQuestPanel();
+  rQuests();
 }
- 
+
 // ═══════════════════════════════════
 // NOTIFY
 // ═══════════════════════════════════
@@ -1898,8 +1924,7 @@ C.addEventListener('touchend',function(e){
   if(cx>=MM_X&&cx<=MM_X+MM_W&&cy>=MM_Y&&cy<=MM_Y+MM_H){e.preventDefault();openBigmap();return;}
   // mechanic tap
   for(const n of G.npcs){if(n.type==='mechanic'){const d=Math.hypot(G.p.wx-n.wx,G.p.wy-n.wy);if(d<15){tryRepair();return;}}}
-  // questgiver tap
-  for(const n of G.npcs){if(n.type==='questgiver'){const d=Math.hypot(G.p.wx-n.wx,G.p.wy-n.wy);if(d<15){openQuests();return;}}}
+  // questgiver tap — handled via ЗАДАНИЯ tab in panel
 },{passive:false});
 document.getElementById('jpad').addEventListener('touchstart',e=>{e.preventDefault();const t=e.changedTouches[0];jID=t.identifier;jA=true;const r=jb2.getBoundingClientRect();jO={x:r.left+r.width/2,y:r.top+r.height/2};},{passive:false});
 document.addEventListener('touchmove',e=>{if(!jA)return;e.preventDefault();const t=Array.from(e.touches).find(t=>t.identifier===jID);if(!t)return;let dx=t.clientX-jO.x,dy=t.clientY-jO.y;const d=Math.hypot(dx,dy);if(d>MJ){dx=dx/d*MJ;dy=dy/d*MJ;}jk2.style.transform=`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px))`;G.jd={x:dx/MJ,y:dy/MJ};},{passive:false});
