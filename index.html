@@ -45,12 +45,26 @@ html,body{width:100%;height:100%;overflow:hidden;background:#1a1a0e;touch-action
   box-shadow:0 4px 20px #d4c04033,0 0 0 1px #00000044;font-family:'Courier New',monospace}
  
 /* ── CONTROLS ── */
-#ctrl{display:flex;align-items:flex-end;justify-content:space-between;
-  padding:6px 12px 10px;
-  padding-bottom:max(10px,env(safe-area-inset-bottom,10px));
-  background:linear-gradient(0deg,rgba(10,12,4,.92) 0%,rgba(18,20,8,.7) 100%);
-  border-top:1px solid rgba(90,96,32,.4);flex-shrink:0;position:relative;height:130px}
- 
+#ctrl{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  padding:0;
+  background:transparent;
+  border:none;
+  flex-shrink:0;
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:130px;
+  pointer-events:none;
+  }
+ #wslots,
+#rightcol,
+#jpad{
+    pointer-events:auto;
+}
 /* LEFT: two weapon slot squares */
 #wslots{display:flex;flex-direction:column;gap:6px;justify-content:flex-end;padding-bottom:4px}
 .wslot-btn{width:58px;height:58px;border-radius:14px;cursor:pointer;border:none;
@@ -1556,12 +1570,16 @@ function render3D(dt){
     bm.rotation.y=-G.boss.facing+Math.PI;
     const pulse=Math.sin(G.time*.003)*.08;bm.scale.y=1+pulse;bm.scale.x=1-pulse*.5;
     // boss bar HTML
+if (G.boss.aggroed) {
     document.getElementById('bbar').style.display='flex';
     document.getElementById('bbn').textContent=G.boss.name;
     document.getElementById('bbf').style.width=(G.boss.hp/G.boss.maxHp*100)+'%';
     document.getElementById('bht').textContent=Math.ceil(G.boss.hp)+'/'+G.boss.maxHp;
+    } else {
+    document.getElementById('bbar').style.display='none';
+    }
   } else if(THR_bossMesh&&THR_bossMesh.parent){THR.scene.remove(THR_bossMesh);THR_bossMesh=null;}
-
+ }
   // Portal spin
   for(const pm of THR.portalMeshes){if(pm._ring)pm._ring.rotation.z=G.time*.002;}
 
