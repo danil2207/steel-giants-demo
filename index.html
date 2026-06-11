@@ -1294,7 +1294,17 @@ function startAnim(){
     G.p=sv.p;G.zone=sv.zone||0;
     if(sv.quest)G.quest=sv.quest;
     if(!G.p.sk)G.p.sk={bal:0,enw:0,rkt:0,arm:0,crg:0,ens:0};
+    if(!G.p.w||!Array.isArray(G.p.w))G.p.w=[null,null];
+    while(G.p.w.length<2)G.p.w.push(null);
+    if(!G.p.enSl||!Array.isArray(G.p.enSl))G.p.enSl=[null,null,null,null];
+    if(!G.p.arSl||!Array.isArray(G.p.arSl))G.p.arSl=[null,null];
+    if(!G.p.inv)G.p.inv=[];
+    if(!G.p.invMax)G.p.invMax=8;
+    if(!G.p.mech)G.p.mech='scout';
     G.p.en=G.p.maxEn||100;
+    for(let i=0;i<G.p.w.length;i++){if(G.p.w[i]&&!WEAPONS.find(x=>x.id===G.p.w[i]))G.p.w[i]=null;}
+    G.p.enSl=G.p.enSl.map(id=>id&&MODULES.find(x=>x.id===id)?id:null);
+    G.p.arSl=G.p.arSl.map(id=>id&&MODULES.find(x=>x.id===id)?id:null);
     Object.values(ZONES).forEach(z=>{if(typeof z==='object'&&z.name)z.seed=z.seed||123;});
   }
   genWorld();calcStats();updHUD();startAnim();
