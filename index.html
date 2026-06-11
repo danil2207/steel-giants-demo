@@ -245,6 +245,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#1a1a0e;touch-action
       Джойстик — движение | SLOT1/SLOT2 — огонь<br>SHOP у торговца | MECH / INV — меню
     </div>
     <button class="ov-btn" onclick="startGame()">[ ЗАПУСТИТЬ МЕХ ]</button>
+    <script>
+    function startGame(){
+      document.getElementById('overlay-start').style.display='none';
+      ia();
+    }
+    </script>
     <div id="save-info" style="font-size:9px;color:#8a9040;margin-top:4px;font-family:'Courier New',monospace"></div>
   </div>
   <div id="overlay-lvl">
@@ -589,23 +595,27 @@ function genWorld(){
     {wx:SZ_X+8,  wy:SZ_Y+11, name:'КВЕСТОДАТЕЛЬ', col:'#e0a020', type:'questgiver'}
   ];
   if(G.zone<2){
-    G.portals.push({wx:WW-25,wy:WH/2,toZone:G.zone+1,col:ZONES[G.zone+1].acc,back:false});
-    G.portals.push({wx:WW/2,wy:WH-25,toZone:G.zone+1,col:ZONES[G.zone+1].acc,back:false});
+    G.portals.push({wx:WW-25,wy:WH/2,toZone:G.zone+1,col:ZONES[G.zone+1].acc,back:false,id:'port_'+G.portals.length});
+    G.portals.push({wx:WW/2,wy:WH-25,toZone:G.zone+1,col:ZONES[G.zone+1].acc,back:false,id:'port_'+G.portals.length});
   }
   if(G.zone>0){
-    G.portals.push({wx:25,wy:WH/2,toZone:G.zone-1,col:ZONES[G.zone-1].acc,back:true});
-    G.portals.push({wx:SZ_X+SZ_W/2,wy:SZ_Y+SZ_H-3,toZone:G.zone-1,col:ZONES[G.zone-1].acc,back:true,inSZ:true});
+    G.portals.push({wx:25,wy:WH/2,toZone:G.zone-1,col:ZONES[G.zone-1].acc,back:true,id:'port_'+G.portals.length});
+    G.portals.push({wx:SZ_X+SZ_W/2,wy:SZ_Y+SZ_H-3,toZone:G.zone-1,col:ZONES[G.zone-1].acc,back:true,inSZ:true,id:'port_'+G.portals.length});
   }
-  if(THR.renderer){
-    THR.terrainMeshes.forEach(m=>THR.scene.remove(m));THR.terrainMeshes.clear();
-    THR.monMeshes.forEach(m=>THR.scene.remove(m));THR.monMeshes.clear();
-    THR.npcMeshes.forEach(m=>THR.scene.remove(m));THR.npcMeshes.clear();
-    if(THR_bossMesh){THR.scene.remove(THR_bossMesh);THR_bossMesh=null;}
+  if(renderer){
+    floorMeshes.forEach(m=>scene.remove(m));
+    floorMeshes=[];
+    MESH_MAP.forEach((m,k)=>{scene.remove(m);});
+    MESH_MAP.clear();
+    if(bossMesh){scene.remove(bossMesh);bossMesh=null;}
     updatePortalMeshes();
     updateTurretMeshes();
     rebuildPlayerMech();
   }
 }
+function updatePortalMeshes(){}
+function updateTurretMeshes(){}
+function rebuildPlayerMech(){}
 
 const ZONE_LV=[[1,30],[30,70],[70,110]];
 
@@ -746,7 +756,7 @@ function update(dt){
     if(b.aggroed){
       b.walk+=dt*1.2;const bs=b.spd*(b.hp<b.maxHp*.4?1.6:1);
       if(d>2){const nx=b.wx+(p.wx-b.wx)/d*bs,ny=b.wy+(p.wy-b.wy)/d*bs;if(!isBlocked(nx,b.wy))b.wx=nx;if(!isBlocked(b.wx,ny))b.wy=ny;}
-      if(d<2.5){b.atkT-=dt;if(b.atkT<=0){if(G.invulnTimer>0)continue;p.hp=Math.max(0,p.hp-b.atk);b.atkT=1.2;spawnParts(p.wx,p.wy,'#ff4040',7,true);if(p.hp<=0)respawn();}}
+      if(d<2.5){b.atkT-=dt;if(b.atkT<=0&&G.invulnTimer<=0){p.hp=Math.max(0,p.hp-b.atk);b.atkT=1.2;spawnParts(p.wx,p.wy,'#ff4040',7,true);if(p.hp<=0)respawn();}}
       b.shootT-=dt;if(b.shootT<=0){b.shootT=b.hp<b.maxHp*.5?1.2:2.2;const shots=b.hp<b.maxHp*.3?3:b.hp<b.maxHp*.5?2:1;for(let s=0;s<shots;s++){const ang=Math.atan2(p.wy-b.wy,p.wx-b.wx)+(s-(shots-1)/2)*.4;G.projs.push({wx:b.wx,wy:b.wy,vx:Math.cos(ang)*.22,vy:Math.sin(ang)*.22,type:'boss',dmg:Math.round(b.atk*.04),range:20,traveled:0,fromBoss:true});}}
     }
   }
@@ -779,7 +789,7 @@ function killBoss(){
 }
 function respawn(){notify('МЕХ УНИЧТОЖЕН...');G.p.hp=Math.round(G.p.maxHp*.4);G.p.wx=SPAWN_X;G.p.wy=SPAWN_Y;G.invulnTimer=1.5;}
 function levelUp(){G.p.xp-=G.p.xpNext;G.p.lvl++;G.p.xpNext=Math.round(G.p.xpNext*1.45);G.p.skillPts++;document.getElementById('overlay-lvl').style.display='flex';renderSkills();}
-function enterZone(to){if(G.zone_entered)return;G.zone_entered=true;notify('Переход: '+ZONES[to].name+'...');setTimeout(()=>{G.zone=to;G.p.wx=SPAWN_X;G.p.wy=SPAWN_Y;CHUNKS.clear();genWorld();calcStats();notify('Зона: '+ZONES[G.zone].name);},900);}
+function enterZone(to){if(G.zone_entered)return;G.zone_entered=true;notify('Переход: '+ZONES[to].name+'...');setTimeout(()=>{G.zone=to;G.p.wx=SPAWN_X;G.p.wy=SPAWN_Y;CHUNKS.clear();genWorld();calcStats();G.zone_entered=false;notify('Зона: '+ZONES[G.zone].name);},900);}
 function renderSkills(){
   const p=G.p;const sks=[{k:'bal',l:'BALLISTIC',d:'+12% пушки'},{k:'enw',l:'ENERGY',d:'+12% лазеры'},{k:'rkt',l:'ROCKETS',d:'+12% ракеты'},{k:'arm',l:'ARMOR',d:'+8% HP'},{k:'crg',l:'CARGO',d:'+2 ячейки'},{k:'ens',l:'ENERGY SYS',d:'+10% EN'}];
   const el=document.getElementById('skc');el.innerHTML='';
@@ -1159,9 +1169,10 @@ function updateMeshes(){
   for(const m of G.mons){if(!m.dead&&m.hp>0)alive++;}
   const mc=MECHS.find(x=>x.id===p.mech);
   playerMesh.scale.set(mc?mc.bhp/2000:.8,mc?mc.bhp/2000:.8,1);
-  if(G.target){
+  const tg=G.targets[0]||G.targets[1];
+  if(tg&&tg.wx){
     targetMesh.visible=true;
-    targetMesh.position.set((G.target.wx+.5)*ts-WW/2*ts,(G.target.wy+.5)*ts-WH/2*ts,PLAYER_Z+.01);
+    targetMesh.position.set((tg.wx+.5)*ts-WW/2*ts,(tg.wy+.5)*ts-WH/2*ts,PLAYER_Z+.01);
   }else targetMesh.visible=false;
   const CH=16;const cx=Math.floor(p.wx/CH)*CH,cy=Math.floor(p.wy/CH)*CH;
   const pwx=Math.floor(p.wx),pwy=Math.floor(p.wy);
